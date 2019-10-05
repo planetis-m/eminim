@@ -8,7 +8,7 @@ generates code, in compile time, to use directly the JsonParser, without creatin
 For example:
 
 ```nim
-   type Foo = object
+   type Foo = ref object
       value: int
    let s = newStringStream("{\"value\": 1}")
    let a = s.to(Foo)
@@ -17,10 +17,11 @@ For example:
 Produces this code:
 
 ```nim
-   proc pack(s: Stream): Colors =
+   proc pack(s: Stream): Foo =
       var p: JsonParser
       open(p, s, "unknown file")
       discard getTok(p)
+      new(result)
       eat(p, tkCurlyLe)
       while p.tok != tkCurlyRi:
          if p.tok != tkString:
