@@ -8,6 +8,8 @@ generates code, in compile time, to use directly the JsonParser, without creatin
 For example:
 
 ```nim
+   type Foo = object
+      value: int
    let s = newStringStream("{\"value\": 1}")
    let a = s.to(Foo)
 ```
@@ -15,33 +17,32 @@ For example:
 Produces this code:
 
 ```nim
-   proc pack_303206(s`gensym303222: Stream): Colors =
-   var p_303207: JsonParser
-   open(p_303207, s`gensym303222, "unknown file")
-   discard getTok(p_303207)
-   eat(p_303207, tkCurlyLe)
-   while p_303207.tok != tkCurlyRi:
-      if p_303207.tok != tkString:
-         raiseParseErr(p_303207, "string literal as key")
-      let key_303220 = move(p_303207.a)
-      discard getTok(p_303207)
-      eat(p_303207, tkColon)
-      case key_303220
-      of "value":
-         if p_303207.tok ==
-            tkInt:
-         result.value = int(parseInt(p_303207.a))
-         discard getTok(p_303207)
+   proc pack(s: Stream): Colors =
+      var p: JsonParser
+      open(p, s, "unknown file")
+      discard getTok(p)
+      eat(p, tkCurlyLe)
+      while p.tok != tkCurlyRi:
+         if p.tok != tkString:
+            raiseParseErr(p, "string literal as key")
+         let key = move(p.a)
+         discard getTok(p)
+         eat(p, tkColon)
+         case key
+         of "value":
+            if p.tok == tkInt:
+               result.value = int(parseInt(p.a))
+               discard getTok(p)
+            else:
+               raiseParseErr(p, "int")
          else:
-         raiseParseErr(p_303207, "int")
-      else:
-         raiseParseErr(p_303207, "object field")
-      if p_303207.tok != tkComma:
-         break
-      discard getTok(p_303207)
-   eat(p_303207, tkCurlyRi)
-   eat(p_303207, tkEof)
-   close(p_303207)
+            raiseParseErr(p, "object field")
+         if p.tok != tkComma:
+            break
+         discard getTok(p)
+      eat(p, tkCurlyRi)
+      eat(p, tkEof)
+      close(p)
 
-   pack_303206(s)
+   pack(s)
 ```

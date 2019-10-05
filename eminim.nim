@@ -85,7 +85,7 @@ template loadFloat(parser, data, dataTy) =
       raiseParseErr(parser, "float")
 
 template raiseWrongKey(parser) =
-   raiseParseErr(parser, "object field")
+   raiseParseErr(parser, "valid object field")
 
 proc loadAny(nodeTy, param, parser: NimNode): NimNode =
    let baseTy = getTypeImpl(nodeTy)
