@@ -1,0 +1,16 @@
+# Ignore all root files
+/*
+# Exclude source code files in subdirectories
+!/*.nim
+!/*.txt
+!/*.md
+# Exclude root directories
+!/*/
+# Include nimcache subdirectories
+/*/nimcache/
+# Include all files in subdirectories
+/*/*
+# Exclude source code files in subdirectories
+!/*/*.nim
+!/*/*.txt
+!/*/*.md
