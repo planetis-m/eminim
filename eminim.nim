@@ -90,10 +90,15 @@ template raiseWrongKey(parser) =
 proc loadAny(nodeTy, param, parser: NimNode): NimNode =
    let baseTy = getTypeImpl(nodeTy)
    case baseTy.typeKind
-   of ntyObject:
+   of ntyRef:
+      result = loadAny(baseTy[0], param, parser)
+      result.insert(0, newCall(bindSym"new", param))
+   of ntyObject, ntyTuple:
+      if baseTy.kind == nnkTupleConstr: error("Anonymous tuples not supported")
       let key = genSym(nskLet, "key")
       let caseStr = nnkCaseStmt.newTree(key)
-      for n in baseTy[2]:
+      let idents = if baseTy.kind == nnkTupleTy: baseTy else: baseTy[2]
+      for n in idents:
          n.expectKind nnkIdentDefs
          caseStr.add nnkOfBranch.newTree(newLit(n[0].strVal),
             loadAny(n[1], nnkDotExpr.newTree(param, n[0]), parser))
@@ -113,7 +118,7 @@ proc loadAny(nodeTy, param, parser: NimNode): NimNode =
    of ntyRange:
       result = loadAny(baseTy[1][1], param, parser)
    of ntyDistinct:
-      result = newCall(nodeTy, loadAny(baseTy[0], param, parser))
+      result = loadAny(baseTy[0], param, parser)
    of ntyString:
       result = getAst(loadString(parser, param))
    of ntyChar:
@@ -149,8 +154,8 @@ macro to(s: Stream, T: typedesc): untyped =
       newCall(name, s))
 
 when isMainModule:
-   type Foo = object
+   # TODO: Fix distinct
+   type Foo = ref object
       value: int
    let s = newStringStream("{\"value\": 1}")
    let a = s.to(Foo)
-   echo a
