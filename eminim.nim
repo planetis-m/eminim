@@ -1,17 +1,21 @@
 import macros, parsejson, streams, strutils
 
-template loadObj(parser, key, body) =
+template loadObj(parser, body) =
    eat(parser, tkCurlyLe)
    while parser.tok != tkCurlyRi:
       if parser.tok != tkString:
          raiseParseErr(parser, "string literal as key")
-      let key = move(parser.a)
-      discard getTok(parser)
-      eat(parser, tkColon)
       body
       if parser.tok != tkComma: break
       discard getTok(parser)
    eat(parser, tkCurlyRi)
+
+template getFieldValue(parser) =
+   discard getTok(parser)
+   eat(parser, tkColon)
+
+template raiseWrongKey(parser) =
+   raiseParseErr(parser, "valid object field")
 
 template loadSeq(parser, body) =
    eat(parser, tkBracketLe)
@@ -33,7 +37,10 @@ template loadArray(parser, data, idx, body) =
    eat(parser, tkBracketRi)
 
 template loadString(parser, data) =
-   if parser.tok in {tkInt, tkFloat, tkString}:
+   if parser.tok == tkNull:
+      data = ""
+      discard getTok(parser)
+   elif parser.tok == tkString:
       data = move(parser.a)
       discard getTok(parser)
    else:
@@ -81,44 +88,47 @@ template loadFloat(parser, data, dataTy) =
    if parser.tok == tkFloat:
       data = dataTy(parseFloat(parser.a))
       discard getTok(parser)
+   elif parser.tok == tkInt:
+      data = dataTy(parseInt(parser.a))
+      discard getTok(parser)
    else:
-      raiseParseErr(parser, "float")
+      raiseParseErr(parser, "float or int")
 
-template raiseWrongKey(parser) =
-   raiseParseErr(parser, "valid object field")
-
-proc loadAny(nodeTy, param, parser: NimNode): NimNode =
+proc loadAny(nodeTy, param, parser: NimNode, depth: int): NimNode =
+   if depth > 150:
+      error("Recursion limit reached")
    let baseTy = getTypeImpl(nodeTy)
    case baseTy.typeKind
    of ntyRef:
-      result = loadAny(baseTy[0], param, parser)
+      result = loadAny(baseTy[0], param, parser, depth + 1)
       result.insert(0, newCall(bindSym"new", param))
    of ntyObject, ntyTuple:
-      if baseTy.kind == nnkTupleConstr: error("Anonymous tuples not supported")
-      let key = genSym(nskLet, "key")
-      let caseStr = nnkCaseStmt.newTree(key)
+      if baseTy.kind == nnkTupleConstr:
+         error("Use a named tuple instead of: " & nodeTy.repr)
+      let caseStr = nnkCaseStmt.newTree(newDotExpr(parser, ident"a"))
       let idents = if baseTy.kind == nnkTupleTy: baseTy else: baseTy[2]
       for n in idents:
          n.expectKind nnkIdentDefs
          caseStr.add nnkOfBranch.newTree(newLit(n[0].strVal),
-            loadAny(n[1], nnkDotExpr.newTree(param, n[0]), parser))
+            newStmtList(getAst(getFieldValue(parser)),
+               loadAny(n[1], newDotExpr(param, n[0]), parser, depth + 1)))
       caseStr.add nnkElse.newTree(getAst(raiseWrongKey(parser)))
-      result = getAst(loadObj(parser, key, caseStr))
+      result = getAst(loadObj(parser, caseStr))
    of ntySet, ntySequence:
       let temp = genSym(nskTemp)
       let initTemp = nnkVarSection.newTree(newIdentDefs(temp, baseTy[1]))
-      let body = loadAny(baseTy[1], temp, parser)
+      let body = loadAny(baseTy[1], temp, parser, depth + 1)
       let addTemp = newCall(
          if baseTy.typeKind == ntySet: bindSym"incl" else: bindSym"add", param, temp)
       result = getAst(loadSeq(parser, newStmtList(initTemp, body, addTemp)))
    of ntyArray:
       let idx = genSym(nskVar, "i")
-      let body = loadAny(baseTy[2], nnkBracketExpr.newTree(param, idx), parser)
+      let body = loadAny(baseTy[2], nnkBracketExpr.newTree(param, idx), parser, depth + 1)
       result = getAst(loadArray(parser, param, idx, body))
    of ntyRange:
-      result = loadAny(baseTy[1][1], param, parser)
+      result = loadAny(baseTy[1][1], param, parser, depth + 1)
    of ntyDistinct:
-      result = loadAny(baseTy[0], param, parser)
+      result = loadAny(baseTy[0], param, parser, depth + 1)
    of ntyString:
       result = getAst(loadString(parser, param))
    of ntyChar:
@@ -138,24 +148,31 @@ template genPackProc(name, retTy, parser, body: untyped): untyped =
    proc name(s: Stream): retTy =
       var parser: JsonParser
       open(parser, s, "unknown file")
-      discard getTok(parser)
-      body
-      eat(parser, tkEof)
-      close(parser)
+      try:
+         discard getTok(parser)
+         body
+         eat(parser, tkEof)
+      finally:
+         close(parser)
 
-macro to(s: Stream, T: typedesc): untyped =
+macro to*(s: Stream, T: typedesc): untyped =
    let typeSym = getTypeImpl(T)[1]
    let name = genSym(nskProc, "pack")
    let parser = genSym(nskVar, "p")
-   let res = ident("result")
-   let body = loadAny(typeSym, res, parser)
+   let res = ident"result"
+   let body = loadAny(typeSym, res, parser, 0)
    result = nnkStmtListExpr.newTree(
       getAst(genPackProc(name, typeSym, parser, body)),
       newCall(name, s))
 
 when isMainModule:
-   # TODO: Fix distinct
-   type Foo = ref object
-      value: int
+   # TODO:
+   # - fix distinct
+   # - support object variants
+   # - correctly compare nim identifiers
+   # - add Tables, OrderedTables
+   type
+      Foo = ref object
+         value: int
    let s = newStringStream("{\"value\": 1}")
    let a = s.to(Foo)

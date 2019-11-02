@@ -1,13 +1,10 @@
 # Package
 
-version       = "0.1.0"
+version       = "0.2.0"
 author        = "Antonis"
-description   = "Eminim \xE2\x80\x94 JSON deserialization macro for Nim"
+description   = "JSON deserialization macro for Nim"
 license       = "MIT"
-srcDir        = "src"
-
-
 
 # Dependencies
 
-requires "nim >= 1.0.9"
+requires "nim >= 1.0.0"

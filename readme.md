@@ -20,30 +20,31 @@ Produces this code:
    proc pack(s: Stream): Foo =
       var p: JsonParser
       open(p, s, "unknown file")
-      discard getTok(p)
-      new(result)
-      eat(p, tkCurlyLe)
-      while p.tok != tkCurlyRi:
-         if p.tok != tkString:
-            raiseParseErr(p, "string literal as key")
-         let key = move(p.a)
+      try:
          discard getTok(p)
-         eat(p, tkColon)
-         case key
-         of "value":
-            if p.tok == tkInt:
-               result.value = int(parseInt(p.a))
+         new(result)
+         eat(p, tkCurlyLe)
+         while p.tok != tkCurlyRi:
+            if p.tok != tkString:
+               raiseParseErr(p, "string literal as key")
+            case p.a
+            of "value":
                discard getTok(p)
+               eat(p, tkColon)
+               if p.tok == tkInt:
+                  result.value = int(parseInt(p.a))
+                  discard getTok(p)
+               else:
+                  raiseParseErr(p, "int")
             else:
-               raiseParseErr(p, "int")
-         else:
-            raiseParseErr(p, "object field")
-         if p.tok != tkComma:
-            break
-         discard getTok(p)
-      eat(p, tkCurlyRi)
-      eat(p, tkEof)
-      close(p)
+               raiseParseErr(p, "object field")
+            if p.tok != tkComma:
+               break
+            discard getTok(p)
+         eat(p, tkCurlyRi)
+         eat(p, tkEof)
+      finally:
+         close(p)
 
    pack(s)
 ```
