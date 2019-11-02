@@ -1,14 +1,15 @@
 import macros, parsejson, streams, strutils
 
-template loadObj(parser, body) =
-   eat(parser, tkCurlyLe)
-   while parser.tok != tkCurlyRi:
-      if parser.tok != tkString:
-         raiseParseErr(parser, "string literal as key")
-      body
-      if parser.tok != tkComma: break
-      discard getTok(parser)
-   eat(parser, tkCurlyRi)
+template loadObj(parser, dataTy, name, body) =
+   proc name(parser: var JsonParser): dataTy {.nimcall.} =
+      eat(parser, tkCurlyLe)
+      while parser.tok != tkCurlyRi:
+         if parser.tok != tkString:
+            raiseParseErr(parser, "string literal as key")
+         body
+         if parser.tok != tkComma: break
+         discard getTok(parser)
+      eat(parser, tkCurlyRi)
 
 template getFieldValue(parser) =
    discard getTok(parser)
@@ -100,20 +101,24 @@ proc loadAny(nodeTy, param, parser: NimNode, depth: int): NimNode =
    let baseTy = getTypeImpl(nodeTy)
    case baseTy.typeKind
    of ntyRef:
-      result = loadAny(baseTy[0], param, parser, depth + 1)
-      result.insert(0, newCall(bindSym"new", param))
+      result = newStmtList(newCall(bindSym"new", param),
+         loadAny(baseTy[0], param, parser, depth + 1))
    of ntyObject, ntyTuple:
       if baseTy.kind == nnkTupleConstr:
          error("Use a named tuple instead of: " & nodeTy.repr)
+      let name = genSym(nskProc, "pack")
+      let parserPar = genSym(nskParam, "p")
+      let res = ident"result"
       let caseStr = nnkCaseStmt.newTree(newDotExpr(parser, ident"a"))
       let idents = if baseTy.kind == nnkTupleTy: baseTy else: baseTy[2]
       for n in idents:
          n.expectKind nnkIdentDefs
          caseStr.add nnkOfBranch.newTree(newLit(n[0].strVal),
-            newStmtList(getAst(getFieldValue(parser)),
-               loadAny(n[1], newDotExpr(param, n[0]), parser, depth + 1)))
-      caseStr.add nnkElse.newTree(getAst(raiseWrongKey(parser)))
-      result = getAst(loadObj(parser, caseStr))
+            newStmtList(getAst(getFieldValue(parserPar)),
+               loadAny(n[1], newDotExpr(res, n[0]), parserPar, depth + 1)))
+      caseStr.add nnkElse.newTree(getAst(raiseWrongKey(parserPar)))
+      result = newStmtList(getAst(loadObj(parserPar, nodeTy, name, caseStr)),
+         newAssignment(nnkDerefExpr.newTree(param), newCall(name, parser)))
    of ntySet, ntySequence:
       let temp = genSym(nskTemp)
       let initTemp = nnkVarSection.newTree(newIdentDefs(temp, baseTy[1]))
@@ -144,7 +149,7 @@ proc loadAny(nodeTy, param, parser: NimNode, depth: int): NimNode =
    else:
       error("Unsupported type: " & nodeTy.repr)
 
-template genPackProc(name, retTy, parser, body: untyped): untyped =
+template genPackProc(parser, retTy, name, body: untyped): untyped =
    proc name(s: Stream): retTy =
       var parser: JsonParser
       open(parser, s, "unknown file")
@@ -162,8 +167,9 @@ macro to*(s: Stream, T: typedesc): untyped =
    let res = ident"result"
    let body = loadAny(typeSym, res, parser, 0)
    result = nnkStmtListExpr.newTree(
-      getAst(genPackProc(name, typeSym, parser, body)),
+      getAst(genPackProc(parser, typeSym, name, body)),
       newCall(name, s))
+   echo result.repr
 
 when isMainModule:
    # TODO:
