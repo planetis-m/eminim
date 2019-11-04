@@ -22,26 +22,29 @@ Produces this code:
       open(p, s, "unknown file")
       try:
          discard getTok(p)
-         new(result)
-         eat(p, tkCurlyLe)
-         while p.tok != tkCurlyRi:
-            if p.tok != tkString:
-               raiseParseErr(p, "string literal as key")
-            case p.a
-            of "value":
-               discard getTok(p)
-               eat(p, tkColon)
-               if p.tok == tkInt:
-                  result.value = int(parseInt(p.a))
+         proc packImpl(p: var JsonParser): Foo {.nimcall.} =
+            new(result)
+            eat(p, tkCurlyLe)
+            while p.tok != tkCurlyRi:
+               if p.tok != tkString:
+                  raiseParseErr(p, "string literal as key")
+               case p.a
+               of "value":
                   discard getTok(p)
+                  eat(p, tkColon)
+                  if p.tok == tkInt:
+                     result.value = int(parseInt(p.a))
+                     discard getTok(p)
+                  else:
+                     raiseParseErr(p, "int")
                else:
-                  raiseParseErr(p, "int")
-            else:
-               raiseParseErr(p, "object field")
-            if p.tok != tkComma:
-               break
-            discard getTok(p)
-         eat(p, tkCurlyRi)
+                  raiseParseErr(p, "object field")
+               if p.tok != tkComma:
+                  break
+               discard getTok(p)
+            eat(p, tkCurlyRi)
+
+         result = packImpl(p)
          eat(p, tkEof)
       finally:
          close(p)
