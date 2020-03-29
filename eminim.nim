@@ -132,8 +132,7 @@ proc loadAnyImpl(nodeTy, param, parser, genProcs: NimNode, cache: TableRef[
          cache[nodeTy.repr] = name
          genProcs.add newProc(name, [nodeTy, newIdentDefs(parser2,
                nnkVarTy.newTree(bindSym"JsonParser"))], getAst(loadObj(
-               parser2, caseStr)), pragmas = nnkPragma.newTree(
-               ident"nimcall"))
+               parser2, caseStr)))
          result = newAssignment(param, newCall(name, parser))
    of ntySet, ntySequence:
       let temp = genSym(nskTemp)
@@ -179,7 +178,7 @@ proc loadAny(nodeTy, param, parser, genProcs: NimNode, cache: TableRef[string,
       result = loadAnyImpl(nodeTy, param, parser, genProcs, cache, isRef, depth)
 
 template genPackProc(parser, retTy, name, body: untyped): untyped =
-   proc name(s: Stream): retTy =
+   proc name(s: Stream): retTy {.nimcall.} =
       var parser: JsonParser
       open(parser, s, "unknown file")
       try:
@@ -208,5 +207,7 @@ when isMainModule:
    type
       Foo = ref object
          value: int
-   let s = newStringStream("{\"value\": 1}")
+         next: Foo
+
+   let s = newStringStream("{\"value\": 1, \"next\": {\"value\": 2, \"next\": {}}}")
    let a = s.to(Foo)
