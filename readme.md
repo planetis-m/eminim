@@ -40,6 +40,9 @@ proc packImpl(dst: var Bar, p: var JsonParser) =
       var kindTmp: Fruit
       initFromJson(kindTmp, p)
       dst.kind = kindTmp
+      if p.tok != tkComma:
+        break
+      discard getTok(p)
       case dst.kind
       of Banana:
         case p.a
