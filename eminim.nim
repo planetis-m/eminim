@@ -1,21 +1,21 @@
 import macros, parsejson, streams, strutils, options, tables
 
-proc initFromJson(dst: var string; p: var JsonParser)
-proc initFromJson(dst: var char; p: var JsonParser)
-proc initFromJson(dst: var bool; p: var JsonParser)
-#proc initFromJson(dst: var JsonNode; p: var JsonParser)
-proc initFromJson[T: SomeInteger](dst: var T; p: var JsonParser)
-proc initFromJson[T: SomeFloat](dst: var T; p: var JsonParser)
-proc initFromJson[T: enum](dst: var T; p: var JsonParser)
-proc initFromJson[T](dst: var seq[T]; p: var JsonParser)
-proc initFromJson[S, T](dst: var array[S, T]; p: var JsonParser)
-proc initFromJson[T](dst: var (Table[string, T]|OrderedTable[string, T]); p: var JsonParser)
-proc initFromJson[T](dst: var ref T; p: var JsonParser)
-proc initFromJson[T](dst: var Option[T]; p: var JsonParser)
-#proc initFromJson[T: distinct](dst: var T; p: var JsonParser)
-proc initFromJson[T: object|tuple](dst: var T; p: var JsonParser)
+proc initFromJson*(dst: var string; p: var JsonParser)
+proc initFromJson*(dst: var char; p: var JsonParser)
+proc initFromJson*(dst: var bool; p: var JsonParser)
+#proc initFromJson*(dst: var JsonNode; p: var JsonParser)
+proc initFromJson*[T: SomeInteger](dst: var T; p: var JsonParser)
+proc initFromJson*[T: SomeFloat](dst: var T; p: var JsonParser)
+proc initFromJson*[T: enum](dst: var T; p: var JsonParser)
+proc initFromJson*[T](dst: var seq[T]; p: var JsonParser)
+proc initFromJson*[S, T](dst: var array[S, T]; p: var JsonParser)
+proc initFromJson*[T](dst: var (Table[string, T]|OrderedTable[string, T]); p: var JsonParser)
+proc initFromJson*[T](dst: var ref T; p: var JsonParser)
+proc initFromJson*[T](dst: var Option[T]; p: var JsonParser)
+#proc initFromJson*[T: distinct](dst: var T; p: var JsonParser)
+proc initFromJson*[T: object|tuple](dst: var T; p: var JsonParser)
 
-proc initFromJson(dst: var string; p: var JsonParser) =
+proc initFromJson*(dst: var string; p: var JsonParser) =
   if p.tok == tkNull:
     dst = ""
     discard getTok(p)
@@ -25,7 +25,7 @@ proc initFromJson(dst: var string; p: var JsonParser) =
   else:
     raiseParseErr(p, "string or null")
 
-proc initFromJson(dst: var char; p: var JsonParser) =
+proc initFromJson*(dst: var char; p: var JsonParser) =
   if p.tok == tkString and len(p.a) == 1:
     dst = p.a[0]
     discard getTok(p)
@@ -35,7 +35,7 @@ proc initFromJson(dst: var char; p: var JsonParser) =
   else:
     raiseParseErr(p, "string of length 1 or int for a char")
 
-proc initFromJson(dst: var bool; p: var JsonParser) =
+proc initFromJson*(dst: var bool; p: var JsonParser) =
   case p.tok
   of tkTrue:
     dst = true
@@ -46,14 +46,14 @@ proc initFromJson(dst: var bool; p: var JsonParser) =
   else:
     raiseParseErr(p, "'true' or 'false' for a bool")
 
-proc initFromJson[T: SomeInteger](dst: var T; p: var JsonParser) =
+proc initFromJson*[T: SomeInteger](dst: var T; p: var JsonParser) =
   if p.tok == tkInt:
     dst = T(parseInt(p.a))
     discard getTok(p)
   else:
     raiseParseErr(p, "int")
 
-proc initFromJson[T: SomeFloat](dst: var T; p: var JsonParser) =
+proc initFromJson*[T: SomeFloat](dst: var T; p: var JsonParser) =
   if p.tok == tkFloat:
     dst = T(parseFloat(p.a))
     discard getTok(p)
@@ -63,7 +63,7 @@ proc initFromJson[T: SomeFloat](dst: var T; p: var JsonParser) =
   else:
     raiseParseErr(p, "float or int")
 
-proc initFromJson[T: enum](dst: var T; p: var JsonParser) =
+proc initFromJson*[T: enum](dst: var T; p: var JsonParser) =
   if p.tok == tkString:
     dst = parseEnum[T](p.a)
     discard getTok(p)
@@ -73,7 +73,7 @@ proc initFromJson[T: enum](dst: var T; p: var JsonParser) =
   else:
     raiseParseErr(p, "string or int for a enum")
 
-proc initFromJson[T](dst: var seq[T]; p: var JsonParser) =
+proc initFromJson*[T](dst: var seq[T]; p: var JsonParser) =
   eat(p, tkBracketLe)
   var i = 0
   while p.tok != tkBracketRi:
@@ -85,7 +85,7 @@ proc initFromJson[T](dst: var seq[T]; p: var JsonParser) =
     discard getTok(p)
   eat(p, tkBracketRi)
 
-proc initFromJson[S, T](dst: var array[S, T]; p: var JsonParser) =
+proc initFromJson*[S, T](dst: var array[S, T]; p: var JsonParser) =
   eat(p, tkBracketLe)
   var i = low(dst)
   while p.tok != tkBracketRi:
@@ -97,7 +97,7 @@ proc initFromJson[S, T](dst: var array[S, T]; p: var JsonParser) =
     discard getTok(p)
   eat(p, tkBracketRi)
 
-proc initFromJson[T](dst: var (Table[string, T]|OrderedTable[string, T]); p: var JsonParser) =
+proc initFromJson*[T](dst: var (Table[string, T]|OrderedTable[string, T]); p: var JsonParser) =
   eat(p, tkCurlyLe)
   while p.tok != tkCurlyRi:
     if p.tok != tkString:
@@ -110,7 +110,7 @@ proc initFromJson[T](dst: var (Table[string, T]|OrderedTable[string, T]); p: var
     discard getTok(p)
   eat(p, tkCurlyRi)
 
-proc initFromJson[T](dst: var ref T; p: var JsonParser) =
+proc initFromJson*[T](dst: var ref T; p: var JsonParser) =
   if p.tok == tkNull:
     dst = nil
     discard getTok(p)
@@ -120,7 +120,7 @@ proc initFromJson[T](dst: var ref T; p: var JsonParser) =
   else:
     raiseParseErr(p, "object or null")
 
-proc initFromJson[T](dst: var Option[T]; p: var JsonParser) =
+proc initFromJson*[T](dst: var Option[T]; p: var JsonParser) =
   if p.tok != tkNull:
     var tmp: T
     initFromJson(tmp, p)
@@ -150,9 +150,14 @@ template getFieldValue(parser, tmpSym, fieldSym) =
   initFromJson(tmpSym.fieldSym, parser)
 
 template getKindValue(parser, tmpSym, kindSym, kindType) =
+  discard getTok(parser)
+  eat(parser, tkColon)
   var kindTmp: kindType
   initFromJson(kindTmp, parser)
   tmpSym.kindSym = kindTmp
+  if parser.tok != tkComma:
+    break
+  discard getTok(parser)
 
 proc foldObjectBody(typeNode, tmpSym, parser: NimNode): NimNode =
   case typeNode.kind
@@ -168,27 +173,30 @@ proc foldObjectBody(typeNode, tmpSym, parser: NimNode): NimNode =
     expectLen(typeNode, 3)
     let fieldSym = typeNode[0]
     let fieldType = typeNode[1]
-    # Detecting incompatiple tuple types in `assignObjectImpl` only
-    # would be much cleaner, but the ast for tuple types does not
-    # contain usable type information.
     detectIncompatibleType(fieldType, fieldSym)
     result = nnkOfBranch.newTree(newLit(fieldSym.strVal),
         getAst(getFieldValue(parser, tmpSym, fieldSym)))
   of nnkRecCase:
     let kindSym = typeNode[0][0]
     let kindType = typeNode[0][1]
-    result = getAst(getKindValue(parser, tmpSym, kindSym, kindType))
-    result.add nnkCaseStmt.newTree(nnkDotExpr.newTree(tmpSym, kindSym))
+    result = nnkOfBranch.newTree(newLit(kindSym.strVal),
+        getAst(getKindValue(parser, tmpSym, kindSym, kindType)))
+    result[^1].add nnkCaseStmt.newTree(nnkDotExpr.newTree(tmpSym, kindSym))
     for i in 1..<typeNode.len:
       let x = foldObjectBody(typeNode[i], tmpSym, parser)
-      if x.kind != nnkNone: result.add x
+      if x.kind != nnkNone: result[^1][^1].add x
   of nnkOfBranch, nnkElse:
     result = copyNimNode(typeNode)
     for i in 0..typeNode.len-2:
       result.add copyNimTree(typeNode[i])
     let inner = newNimNode(nnkStmtListExpr)
+    if typeNode[^1].kind == nnkIdentDefs:
+      inner.add nnkCaseStmt.newTree(newDotExpr(parser, ident"a"))
     let x = foldObjectBody(typeNode[^1], tmpSym, parser)
-    if x.kind != nnkNone: inner.add x
+    if x.kind == nnkCaseStmt: inner.add x
+    elif x.kind != nnkNone: inner[^1].add x
+    if typeNode[^1].kind == nnkIdentDefs:
+      inner[^1].add nnkElse.newTree(getAst(raiseWrongKey(parser)))
     result.add inner
   of nnkObjectTy:
     expectKind(typeNode[0], nnkEmpty)
@@ -199,7 +207,8 @@ proc foldObjectBody(typeNode, tmpSym, parser: NimNode): NimNode =
       var impl = getTypeImpl(base)
       while impl.kind in {nnkRefTy, nnkPtrTy}:
         impl = getTypeImpl(impl[0])
-      result.add foldObjectBody(impl, tmpSym, parser)
+      let x = foldObjectBody(impl, tmpSym, parser)
+      if x.kind != nnkNone: result.add x
     let body = typeNode[2]
     let x = foldObjectBody(body, tmpSym, parser)
     expectKind(x, nnkCaseStmt)
@@ -214,8 +223,8 @@ macro assignObjectImpl(dst: typed; parser: JsonParser): untyped =
     result = foldObjectBody(typeSym, dst, parser)
   else:
     result = foldObjectBody(typeSym.getTypeImpl, dst, parser)
-
-proc initFromJson[T: object|tuple](dst: var T; p: var JsonParser) =
+  echo result.repr
+proc initFromJson*[T: object|tuple](dst: var T; p: var JsonParser) =
   assignObjectImpl(dst, p)
 
 proc jsonTo*[T](s: Stream, t: typedesc[T]): T =
