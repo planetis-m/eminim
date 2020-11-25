@@ -158,6 +158,8 @@ template getKindValue(parser, tmpSym, kindSym, kindType) =
   if parser.tok != tkComma:
     break
   discard getTok(parser)
+  if p.tok != tkString:
+    raiseParseErr(p, "string literal as key")
 
 proc foldObjectBody(typeNode, tmpSym, parser: NimNode): NimNode =
   case typeNode.kind
@@ -223,7 +225,7 @@ macro assignObjectImpl(dst: typed; parser: JsonParser): untyped =
     result = foldObjectBody(typeSym, dst, parser)
   else:
     result = foldObjectBody(typeSym.getTypeImpl, dst, parser)
-  echo result.repr
+
 proc initFromJson*[T: object|tuple](dst: var T; p: var JsonParser) =
   assignObjectImpl(dst, p)
 

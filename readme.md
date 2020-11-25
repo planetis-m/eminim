@@ -43,6 +43,8 @@ proc packImpl(dst: var Bar, p: var JsonParser) =
       if p.tok != tkComma:
         break
       discard getTok(p)
+      if p.tok != tkString:
+        raiseParseErr(p, "string literal as key")
       case dst.kind
       of Banana:
         case p.a
