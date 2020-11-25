@@ -8,46 +8,73 @@ generates code, in compile time, to use directly the JsonParser, without creatin
 For example:
 
 ```nim
-  type Foo = ref object
-    value: int
-  let s = newStringStream("{\"value\": 1}")
-  let a = s.jsonTo(Foo)
+type
+  Bar = object
+    name: string
+    case kind: Fruit
+    of Banana:
+      bad: float
+      banana: int
+    of Apple: apple: string
+
+let s = newStringStream("""{"name":"hello","kind":"Apple","apple":"world"}""")
+let a = s.jsonTo(Bar)
 ```
 
 Produces this code:
 
 ```nim
-  proc packImpl(p: var JsonParser): Foo =
-    new(result)
-    eat(p, tkCurlyLe)
-    while p.tok != tkCurlyRi:
-      if p.tok != tkString:
-        raiseParseErr(p, "string literal as key")
-      case p.a
-      of "value":
-        discard getTok(p)
-        eat(p, tkColon)
-        if p.tok == tkInt:
-          result.value = int(parseInt(p.a))
+proc packImpl(dst: var Bar, p: var JsonParser) =
+  eat(p, tkCurlyLe)
+  while p.tok != tkCurlyRi:
+    if p.tok != tkString:
+      raiseParseErr(p, "string literal as key")
+    case p.a
+    of "name":
+      discard getTok(p)
+      eat(p, tkColon)
+      initFromJson(dst.name, p)
+    of "kind":
+      discard getTok(p)
+      eat(p, tkColon)
+      var kindTmp: Fruit
+      initFromJson(kindTmp, p)
+      dst.kind = kindTmp
+      case dst.kind
+      of Banana:
+        case p.a
+        of "bad":
           discard getTok(p)
+          eat(p, tkColon)
+          initFromJson(dst.bad, p)
+        of "banana":
+          discard getTok(p)
+          eat(p, tkColon)
+          initFromJson(dst.banana, p)
         else:
-          raiseParseErr(p, "int")
-      else:
-        raiseParseErr(p, "object field")
-      if p.tok != tkComma:
-        break
-      discard getTok(p)
-    eat(p, tkCurlyRi)
+          raiseParseErr(p, "valid object field")
+      of Apple:
+        case p.a
+        of "apple":
+          discard getTok(p)
+          eat(p, tkColon)
+          initFromJson(dst.apple, p)
+        else:
+          raiseParseErr(p, "valid object field")
+    else:
+      raiseParseErr(p, "valid object field")
+    if p.tok != tkComma:
+      break
+    discard getTok(p)
+  eat(p, tkCurlyRi)
 
-  proc pack(s: Stream): Foo =
-    var p: JsonParser
-    open(p, s, "unknown file")
-    try:
-      discard getTok(p)
-      result = packImpl(p)
-      eat(p, tkEof)
-    finally:
-      close(p)
-
-  pack(s)
+proc pack(s: Stream, t: typedesc[Bar]): Bar =
+  var p: JsonParser
+  open(p, s, "unknown file")
+  try:
+    discard getTok(p)
+    packImpl(result, p)
+    eat(p, tkEof)
+  finally:
+    close(p)
 ```
