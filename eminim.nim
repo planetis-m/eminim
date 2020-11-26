@@ -87,7 +87,7 @@ proc initFromJson*[T](dst: var seq[T]; p: var JsonParser) =
 
 proc initFromJson*[S, T](dst: var array[S, T]; p: var JsonParser) =
   eat(p, tkBracketLe)
-  var i = low(dst)
+  var i: int = low(dst)
   while p.tok != tkBracketRi:
     if i > high(dst):
       raise newException(IndexDefect, "index out of bounds")

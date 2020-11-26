@@ -9,7 +9,7 @@ type
     Banana
   Baz = distinct string
   BarBar = object
-    value: Baz
+    value: array[2..8, int]
   Bar = object
     name: string
     case kind: Fruit
@@ -34,8 +34,8 @@ block:
   let s = newStringStream("""{"value": 42}""")
   let a = s.jsonTo(Foo)
   assert(a != nil and a.value == 42)
-#block:
+block:
   #proc initFromJson(dst: var Baz; p: var JsonParser) {.borrow.}
-  #let s = newStringStream("""{"value": "abc"}""")
-  #let a = s.jsonTo(BarBar)
-  #assert(a.value.string == "abc")
+  let s = newStringStream("""{"value": [0, 1, 2, 3, 4, 5, 6]}""")
+  let a = s.jsonTo(BarBar)
+  echo a.value
