@@ -5,11 +5,11 @@ type
     value: int
     next: Foo
   Fruit = enum
-    Apple
-    Banana
+    Apple, Banana, Orange
   Baz = distinct string
+  BarBaz = array[2..8, int]
   BarBar = object
-    value: array[2..8, int]
+    value: Baz
   Bar = object
     name: string
     case kind: Fruit
@@ -17,6 +17,7 @@ type
       bad: float
       banana: int
     of Apple: apple: string
+    else: discard
 
 block:
   let s = newStringStream("""{"name":"hello","kind":"Apple","apple":"world"}""")
@@ -35,7 +36,11 @@ block:
   let a = s.jsonTo(Foo)
   assert(a != nil and a.value == 42)
 block:
+  let s = newStringStream("""[0, 1, 2, 3, 4, 5, 6]""")
+  let a = s.jsonTo(BarBaz)
+  assert a == [0, 1, 2, 3, 4, 5, 6]
+#block:
   #proc initFromJson(dst: var Baz; p: var JsonParser) {.borrow.}
-  let s = newStringStream("""{"value": [0, 1, 2, 3, 4, 5, 6]}""")
-  let a = s.jsonTo(BarBar)
-  assert a.value == [0, 1, 2, 3, 4, 5, 6]
+  #let s = newStringStream(""" "world" """)
+  #let a = s.jsonTo(Baz)
+  #assert a == "world"
