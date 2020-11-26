@@ -95,6 +95,8 @@ proc initFromJson*[S, T](dst: var array[S, T]; p: var JsonParser) =
     inc(i)
     if p.tok != tkComma: break
     discard getTok(p)
+  if i <= high(dst):
+    raise newException(RangeDefect, "array not filled")
   eat(p, tkBracketRi)
 
 proc initFromJson*[T](dst: var (Table[string, T]|OrderedTable[string, T]); p: var JsonParser) =

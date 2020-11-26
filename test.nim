@@ -38,4 +38,4 @@ block:
   #proc initFromJson(dst: var Baz; p: var JsonParser) {.borrow.}
   let s = newStringStream("""{"value": [0, 1, 2, 3, 4, 5, 6]}""")
   let a = s.jsonTo(BarBar)
-  echo a.value
+  assert a.value == [0, 1, 2, 3, 4, 5, 6]
