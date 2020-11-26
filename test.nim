@@ -18,6 +18,8 @@ type
       banana: int
     of Apple: apple: string
     else: discard
+  Rejected = object
+    val: (int,)
 
 block:
   let s = newStringStream("""{"name":"hello","kind":"Apple","apple":"world"}""")
@@ -44,3 +46,11 @@ block:
   #let s = newStringStream(""" "world" """)
   #let a = s.jsonTo(Baz)
   #assert a == "world"
+#block:
+  #let s = newStringStream("""{"value": 42}""")
+  #let a = s.jsonTo((int,))
+  #assert(a[0] == 42)
+#block:
+  #let s = newStringStream("""{"val": {"value": 42}}""")
+  #let a = s.jsonTo(Rejected)
+  #assert(a.val[0] == 42)

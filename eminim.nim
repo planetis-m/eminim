@@ -89,8 +89,6 @@ proc initFromJson*[S, T](dst: var array[S, T]; p: var JsonParser) =
   eat(p, tkBracketLe)
   var i: int = low(dst)
   while p.tok != tkBracketRi:
-    if i > high(dst):
-      raise newException(IndexDefect, "index out of bounds")
     initFromJson(dst[i], p)
     inc(i)
     if p.tok != tkComma: break
@@ -129,9 +127,9 @@ proc initFromJson*[T](dst: var Option[T]; p: var JsonParser) =
     dst = some(tmp)
   else: none[T]()
 
-proc detectIncompatibleType(typeExpr, lineinfoNode: NimNode) =
+proc detectIncompatibleType(typeExpr: NimNode) =
   if typeExpr.kind == nnkTupleConstr:
-    error("Use a named tuple instead of: " & typeExpr.repr, lineinfoNode)
+    error("Use a named tuple instead of: " & typeExpr.repr)
 
 template readFields(parser, body) =
   eat(parser, tkCurlyLe)
@@ -183,7 +181,7 @@ proc foldObjectBody(typeNode, tmpSym, parser: NimNode): NimNode =
     expectLen(typeNode, 3)
     let fieldSym = typeNode[0]
     let fieldType = typeNode[1]
-    detectIncompatibleType(fieldType, fieldSym)
+    detectIncompatibleType(fieldType)
     result = nnkOfBranch.newTree(newLit(fieldSym.strVal),
         getAst(getFieldValue(parser, tmpSym, fieldSym)))
   of nnkRecCase:
@@ -230,7 +228,7 @@ proc foldObjectBody(typeNode, tmpSym, parser: NimNode): NimNode =
 macro assignObjectImpl(dst: typed; parser: JsonParser): untyped =
   let typeSym = getTypeInst(dst)
   if typeSym.kind in {nnkTupleTy, nnkTupleConstr}:
-    detectIncompatibleType(typeSym, dst)
+    detectIncompatibleType(typeSym)
     result = foldObjectBody(typeSym, dst, parser)
   else:
     result = foldObjectBody(typeSym.getTypeImpl, dst, parser)
