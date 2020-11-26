@@ -11,7 +11,6 @@ type
   BarBar = object
     value: Baz
   Bar = object
-    name: string
     case kind: Fruit
     of Banana:
       bad: float
@@ -20,11 +19,25 @@ type
     else: discard
   Rejected = object
     val: (int,)
+  ContentNodeKind = enum
+    P, Br, Text
+  ContentNode = object
+    case kind: ContentNodeKind
+    of P: pChildren: seq[ContentNode]
+    of Br: nil
+    of Text: textStr: string
 
 block:
-  let s = newStringStream("""{"name":"hello","kind":"Apple","apple":"world"}""")
+  let mynode = ContentNode(kind: P, pChildren: @[
+    ContentNode(kind: Text, textStr: "mychild"),
+    ContentNode(kind: Br)
+  ])
+  let s = newStringStream("""{"kind":"P","pChildren":[{"kind":"Text","textStr":"mychild"},{"kind":"Br"}]}""")
+  let a = s.jsonTo(ContentNode)
+  assert $a == $mynode
+block:
+  let s = newStringStream("""{"kind":"Apple","apple":"world"}""")
   let a = s.jsonTo(Bar)
-  assert a.name == "hello"
   assert a.kind == Apple
   assert a.apple == "world"
 block:

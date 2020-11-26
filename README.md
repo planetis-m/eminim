@@ -3,7 +3,7 @@
 ## About
 
 This package provides a ``jsonTo`` proc which deserializes the specified type from a ``Stream``. It
-generates code, in compile time, to use directly the JsonParser, without creating intermediate `JsonNode`.
+generates code, in compile time, to use directly the JsonParser, without creating intermediate `JsonNode` tree.
 Supports `options` and `tables`.
 
 For example:
@@ -86,7 +86,7 @@ proc jsonTo(s: Stream, t: typedesc[Bar]): Bar =
 
 ## Limitations
 - Limited support of object variants. The discriminant field is expected first.
-  Also there can be no more fields after the case branches.
+  Also there can be no fields before and after the case section.
   In all other cases it fails with a `JsonParserError`. This limitation is hard to improve.
   The current state might fit some use-cases and it's better than nothing.
 - Distinct types are supposed to work by overloading (or borrowing) proc `initFromJson[T](dst: var T; p: var JsonParser)`.

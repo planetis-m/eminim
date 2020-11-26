@@ -165,7 +165,7 @@ template getKindValue(parser, tmpSym, kindSym, kindType) =
   eat(parser, tkColon)
   var kindTmp: kindType
   initFromJson(kindTmp, parser)
-  tmpSym.kindSym = kindTmp
+  tmpSym = (typeof tmpSym)(kindSym: kindTmp)
 
 proc foldObjectBody(typeNode, tmpSym, parser: NimNode): NimNode =
   case typeNode.kind
