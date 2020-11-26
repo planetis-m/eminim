@@ -7,6 +7,9 @@ type
   Fruit = enum
     Apple
     Banana
+  Baz = distinct string
+  BarBar = object
+    value: Baz
   Bar = object
     name: string
     case kind: Fruit
@@ -31,3 +34,8 @@ block:
   let s = newStringStream("""{"value": 42}""")
   let a = s.jsonTo(Foo)
   assert(a != nil and a.value == 42)
+#block:
+  #proc initFromJson(dst: var Baz; p: var JsonParser) {.borrow.}
+  #let s = newStringStream("""{"value": "abc"}""")
+  #let a = s.jsonTo(BarBar)
+  #assert(a.value.string == "abc")

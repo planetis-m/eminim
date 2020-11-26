@@ -89,11 +89,11 @@ proc initFromJson*[S, T](dst: var array[S, T]; p: var JsonParser) =
   eat(p, tkBracketLe)
   var i = low(dst)
   while p.tok != tkBracketRi:
+    if i > high(dst):
+      raise newException(IndexDefect, "index out of bounds")
     initFromJson(dst[i], p)
     inc(i)
     if p.tok != tkComma: break
-    if i > high(dst):
-      raise newException(IndexDefect, "index out of bounds")
     discard getTok(p)
   eat(p, tkBracketRi)
 
@@ -131,7 +131,7 @@ proc detectIncompatibleType(typeExpr, lineinfoNode: NimNode) =
   if typeExpr.kind == nnkTupleConstr:
     error("Use a named tuple instead of: " & typeExpr.repr, lineinfoNode)
 
-template loadObj(parser, body) =
+template readFields(parser, body) =
   eat(parser, tkCurlyLe)
   while parser.tok != tkCurlyRi:
     if parser.tok != tkString:
@@ -140,6 +140,17 @@ template loadObj(parser, body) =
     if parser.tok != tkComma: break
     discard getTok(parser)
   eat(parser, tkCurlyRi)
+
+template readFieldsInner(parser, body) =
+  if p.tok != tkComma:
+    break
+  discard getTok(p)
+  while parser.tok != tkCurlyRi:
+    if parser.tok != tkString:
+      raiseParseErr(parser, "string literal as key")
+    body
+    if parser.tok != tkComma: break
+    discard getTok(parser)
 
 template raiseWrongKey(parser) =
   raiseParseErr(parser, "valid object field")
@@ -155,11 +166,6 @@ template getKindValue(parser, tmpSym, kindSym, kindType) =
   var kindTmp: kindType
   initFromJson(kindTmp, parser)
   tmpSym.kindSym = kindTmp
-  if parser.tok != tkComma:
-    break
-  discard getTok(parser)
-  if p.tok != tkString:
-    raiseParseErr(p, "string literal as key")
 
 proc foldObjectBody(typeNode, tmpSym, parser: NimNode): NimNode =
   case typeNode.kind
@@ -183,10 +189,11 @@ proc foldObjectBody(typeNode, tmpSym, parser: NimNode): NimNode =
     let kindType = typeNode[0][1]
     result = nnkOfBranch.newTree(newLit(kindSym.strVal),
         getAst(getKindValue(parser, tmpSym, kindSym, kindType)))
-    result[^1].add nnkCaseStmt.newTree(nnkDotExpr.newTree(tmpSym, kindSym))
+    let inner = nnkCaseStmt.newTree(nnkDotExpr.newTree(tmpSym, kindSym))
     for i in 1..<typeNode.len:
       let x = foldObjectBody(typeNode[i], tmpSym, parser)
-      if x.kind != nnkNone: result[^1][^1].add x
+      if x.kind != nnkNone: inner.add x
+    result[^1].add getAst(readFieldsInner(parser, inner))
   of nnkOfBranch, nnkElse:
     result = copyNimNode(typeNode)
     for i in 0..typeNode.len-2:
@@ -214,7 +221,7 @@ proc foldObjectBody(typeNode, tmpSym, parser: NimNode): NimNode =
     let body = typeNode[2]
     let x = foldObjectBody(body, tmpSym, parser)
     expectKind(x, nnkCaseStmt)
-    result.add getAst(loadObj(parser, x))
+    result.add getAst(readFields(parser, x))
   else:
     error("unhandled kind: " & $typeNode.kind, typeNode)
 
@@ -225,6 +232,7 @@ macro assignObjectImpl(dst: typed; parser: JsonParser): untyped =
     result = foldObjectBody(typeSym, dst, parser)
   else:
     result = foldObjectBody(typeSym.getTypeImpl, dst, parser)
+  echo result.repr
 
 proc initFromJson*[T: object|tuple](dst: var T; p: var JsonParser) =
   assignObjectImpl(dst, p)
