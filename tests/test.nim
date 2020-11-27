@@ -32,6 +32,7 @@ type
   BazFoo = ref object of BarFoo
   FooBar = ref object of BazFoo
     v: string
+  Empty = object
 
 block:
   let mynode = ContentNode(kind: P, pChildren: @[
@@ -57,7 +58,7 @@ block:
   let a = s.jsonTo(Foo)
   assert(a != nil and a.value == 42)
 block:
-  let s = newStringStream("""[0, 1, 2, 3, 4, 5, 6]""")
+  let s = newStringStream("[0, 1, 2, 3, 4, 5, 6]")
   let a = s.jsonTo(BarBaz)
   assert a == [0, 1, 2, 3, 4, 5, 6]
 block:
@@ -65,15 +66,18 @@ block:
   let a = s.jsonTo(FooBar)
   assert a.v == "hello"
   assert a.t == 1.0
+block:
+  let s = newStringStream("{}")
+  let a = s.jsonTo(Empty)
+block:
+  let s = newStringStream("""{"x": 42}""")
+  let a = s.jsonTo(tuple[x:int])
+  assert(a[0] == 42)
 #block:
   #proc initFromJson(dst: var Baz; p: var JsonParser) {.borrow.}
   #let s = newStringStream(""" "world" """)
   #let a = s.jsonTo(Baz)
   #assert a.string == "world"
-#block:
-  #let s = newStringStream("""{"value": 42}""")
-  #let a = s.jsonTo((int,))
-  #assert(a[0] == 42)
 #block:
   #let s = newStringStream("""{"val": {"value": 42}}""")
   #let a = s.jsonTo(Rejected)

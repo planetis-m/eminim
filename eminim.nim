@@ -219,12 +219,13 @@ proc foldObjectBody(typeNode, tmpSym, parser: NimNode): NimNode =
 
 macro assignObjectImpl(dst: typed; parser: JsonParser): untyped =
   let typeSym = getTypeInst(dst)
-  if typeSym.kind in {nnkTupleTy, nnkTupleConstr}:
+  result = newStmtList()
+  let x = if typeSym.kind in {nnkTupleTy, nnkTupleConstr}:
     detectIncompatibleType(typeSym)
-    result = foldObjectBody(typeSym, dst, parser)
+    foldObjectBody(typeSym, dst, parser)
   else:
-    result = foldObjectBody(typeSym.getTypeImpl, dst, parser)
-  if result.kind == nnkNone: result = newStmtList()
+    foldObjectBody(typeSym.getTypeImpl, dst, parser)
+  if x.kind != nnkNone: result.add x
 
 proc initFromJson*[T: object|tuple](dst: var T; p: var JsonParser) =
   eat(p, tkCurlyLe)
