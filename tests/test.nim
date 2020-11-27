@@ -24,7 +24,7 @@ type
   ContentNode = object
     case kind: ContentNodeKind
     of P: pChildren: seq[ContentNode]
-    of Br: nil
+    of Br: discard
     of Text: textStr: string
   BazBat = ref object of RootObj
   BarFoo = ref object of BazBat
