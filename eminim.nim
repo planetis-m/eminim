@@ -206,15 +206,14 @@ proc foldObjectBody(typeNode, tmpSym, parser: NimNode): NimNode =
       var impl = getTypeImpl(base)
       while impl.kind in {nnkRefTy, nnkPtrTy}:
         impl = getTypeImpl(impl[0])
-      let x = foldObjectBody(impl, tmpSym, parser)
-      if x.kind != nnkNone: result = x
+      result = foldObjectBody(impl, tmpSym, parser)
     let body = typeNode[2]
     let x = foldObjectBody(body, tmpSym, parser)
-    if x.kind != nnkNone:
-      if result.kind == nnkCaseStmt: # merge case statements
-        expectKind(x, nnkCaseStmt)
+    if result.kind != nnkNone:
+      if x.kind != nnkNone: # merge case statements
+        expectKind(result, nnkCaseStmt)
         for i in 1..x.len-2: result.insert(result.len-1, x[i])
-      else: result = x
+    else: result = x
   else:
     error("unhandled kind: " & $typeNode.kind, typeNode)
 
