@@ -35,7 +35,7 @@ proc initFromJson(dst: var Bar, p: var JsonParser) =
       eat(p, tkColon)
       var kindTmp`gensym0: Fruit
       initFromJson(kindTmp`gensym0, p)
-      dst.kind = kindTmp`gensym0
+      dst = (typeof dst)(kind: kindTmp`gensym0)
       if p.tok != tkComma:
         break
       discard getTok(p)

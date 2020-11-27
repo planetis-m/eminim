@@ -131,16 +131,6 @@ proc detectIncompatibleType(typeExpr: NimNode) =
   if typeExpr.kind == nnkTupleConstr:
     error("Use a named tuple instead of: " & typeExpr.repr)
 
-template readFields(parser, body) =
-  eat(parser, tkCurlyLe)
-  while parser.tok != tkCurlyRi:
-    if parser.tok != tkString:
-      raiseParseErr(parser, "string literal as key")
-    body
-    if parser.tok != tkComma: break
-    discard getTok(parser)
-  eat(parser, tkCurlyRi)
-
 template readFieldsInner(parser, body) =
   if p.tok != tkComma:
     break
@@ -210,18 +200,19 @@ proc foldObjectBody(typeNode, tmpSym, parser: NimNode): NimNode =
   of nnkObjectTy:
     expectKind(typeNode[0], nnkEmpty)
     expectKind(typeNode[1], {nnkEmpty, nnkOfInherit})
-    result = newStmtList()
     if typeNode[1].kind == nnkOfInherit:
       let base = typeNode[1][0]
       var impl = getTypeImpl(base)
       while impl.kind in {nnkRefTy, nnkPtrTy}:
         impl = getTypeImpl(impl[0])
       let x = foldObjectBody(impl, tmpSym, parser)
-      if x.kind != nnkNone: result.add x
+      if x.kind != nnkNone: result = x
     let body = typeNode[2]
     let x = foldObjectBody(body, tmpSym, parser)
-    expectKind(x, nnkCaseStmt)
-    result.add getAst(readFields(parser, x))
+    if x.kind != nnkNone:
+      if result.kind == nnkCaseStmt: # merge case statements
+        for i in 1..x.len-2: result.insert(result.len-1, x[i])
+      else: result = x
   else:
     error("unhandled kind: " & $typeNode.kind, typeNode)
 
@@ -234,10 +225,17 @@ macro assignObjectImpl(dst: typed; parser: JsonParser): untyped =
     result = foldObjectBody(typeSym.getTypeImpl, dst, parser)
 
 proc initFromJson*[T: object|tuple](dst: var T; p: var JsonParser) =
-  assignObjectImpl(dst, p)
+  eat(p, tkCurlyLe)
+  while p.tok != tkCurlyRi:
+    if p.tok != tkString:
+      raiseParseErr(p, "string literal as key")
+    assignObjectImpl(dst, p)
+    if p.tok != tkComma: break
+    discard getTok(p)
+  eat(p, tkCurlyRi)
 
 proc jsonTo*[T](s: Stream, t: typedesc[T]): T =
-  ## `Unmarshals`:idx: the specified node into the object type specified.
+  ## Unmarshals the specified node into the object type specified.
   ##
   ## Known limitations:
   ##

@@ -26,6 +26,12 @@ type
     of P: pChildren: seq[ContentNode]
     of Br: nil
     of Text: textStr: string
+  BarFoo = ref object of RootObj
+    v: string
+  BazFoo = ref object of BarFoo
+    s: int
+  FooBar = ref object of BazFoo
+    t: float
 
 block:
   let mynode = ContentNode(kind: P, pChildren: @[
@@ -41,7 +47,7 @@ block:
   assert a.kind == Apple
   assert a.apple == "world"
 block:
-  let s = newStringStream("""{"value": 1, "next": {"value": 2, "next": {}}}""")
+  let s = newStringStream("""{"value":1,"next":{"value":2,"next":{}}}""")
   let a = s.jsonTo(Foo)
   assert(a != nil and a.value == 1)
   let b = a.next
@@ -54,11 +60,16 @@ block:
   let s = newStringStream("""[0, 1, 2, 3, 4, 5, 6]""")
   let a = s.jsonTo(BarBaz)
   assert a == [0, 1, 2, 3, 4, 5, 6]
+block:
+  let s = newStringStream("""{"v":"hello","t":1.0}""")
+  let a = s.jsonTo(FooBar)
+  assert a.v == "hello"
+  assert a.t == 1.0
 #block:
   #proc initFromJson(dst: var Baz; p: var JsonParser) {.borrow.}
   #let s = newStringStream(""" "world" """)
   #let a = s.jsonTo(Baz)
-  #assert a == "world"
+  #assert a.string == "world"
 #block:
   #let s = newStringStream("""{"value": 42}""")
   #let a = s.jsonTo((int,))
