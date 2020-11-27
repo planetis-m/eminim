@@ -115,7 +115,7 @@ proc initFromJson*[T](dst: var ref T; p: var JsonParser) =
     dst = nil
     discard getTok(p)
   elif p.tok == tkCurlyLe:
-    dst = new(T)
+    new(dst)
     initFromJson(dst[], p)
   else:
     raiseParseErr(p, "object or null")
@@ -200,6 +200,7 @@ proc foldObjectBody(typeNode, tmpSym, parser: NimNode): NimNode =
   of nnkObjectTy:
     expectKind(typeNode[0], nnkEmpty)
     expectKind(typeNode[1], {nnkEmpty, nnkOfInherit})
+    result = newNimNode(nnkNone)
     if typeNode[1].kind == nnkOfInherit:
       let base = typeNode[1][0]
       var impl = getTypeImpl(base)
@@ -211,6 +212,7 @@ proc foldObjectBody(typeNode, tmpSym, parser: NimNode): NimNode =
     let x = foldObjectBody(body, tmpSym, parser)
     if x.kind != nnkNone:
       if result.kind == nnkCaseStmt: # merge case statements
+        expectKind(x, nnkCaseStmt)
         for i in 1..x.len-2: result.insert(result.len-1, x[i])
       else: result = x
   else:
@@ -223,6 +225,7 @@ macro assignObjectImpl(dst: typed; parser: JsonParser): untyped =
     result = foldObjectBody(typeSym, dst, parser)
   else:
     result = foldObjectBody(typeSym.getTypeImpl, dst, parser)
+  if result.kind == nnkNone: result = newStmtList()
 
 proc initFromJson*[T: object|tuple](dst: var T; p: var JsonParser) =
   eat(p, tkCurlyLe)

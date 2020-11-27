@@ -10,7 +10,7 @@ type
   BarBaz = array[2..8, int]
   BarBar = object
     value: Baz
-  Bar = object
+  Bar = ref object
     case kind: Fruit
     of Banana:
       bad: float
@@ -26,12 +26,12 @@ type
     of P: pChildren: seq[ContentNode]
     of Br: nil
     of Text: textStr: string
-  BarFoo = ref object of RootObj
-    v: string
-  BazFoo = ref object of BarFoo
-    s: int
-  FooBar = ref object of BazFoo
+  BazBat = ref object of RootObj
+  BarFoo = ref object of BazBat
     t: float
+  BazFoo = ref object of BarFoo
+  FooBar = ref object of BazFoo
+    v: string
 
 block:
   let mynode = ContentNode(kind: P, pChildren: @[
@@ -49,9 +49,9 @@ block:
 block:
   let s = newStringStream("""{"value":1,"next":{"value":2,"next":{}}}""")
   let a = s.jsonTo(Foo)
-  assert(a != nil and a.value == 1)
+  assert a.value == 1
   let b = a.next
-  assert(b != nil and b.value == 2)
+  assert b.value == 2
 block:
   let s = newStringStream("""{"value": 42}""")
   let a = s.jsonTo(Foo)
