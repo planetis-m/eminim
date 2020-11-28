@@ -6,6 +6,8 @@ type
     next: Foo
   Fruit = enum
     Apple, Banana, Orange
+  Stuff = enum
+    NotApple = 1, NotBanana, NotOrange
   Baz = distinct string
   BarBaz = array[2..8, int]
   BarBar = object
@@ -73,6 +75,10 @@ block:
   let s = newStringStream("""{"x": 42}""")
   let a = s.jsonTo(tuple[x:int])
   assert(a[0] == 42)
+block:
+  let s = newStringStream("1")
+  let a = s.jsonTo(Stuff)
+  assert a == NotApple
 #block:
   #proc initFromJson(dst: var Baz; p: var JsonParser) {.borrow.}
   #let s = newStringStream(""" "world" """)

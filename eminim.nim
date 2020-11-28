@@ -68,7 +68,7 @@ proc initFromJson*[T: enum](dst: var T; p: var JsonParser) =
     dst = parseEnum[T](p.a)
     discard getTok(p)
   elif p.tok == tkInt:
-    dst = T(parseInt(p.a) + ord(T.low))
+    dst = T(parseInt(p.a))
     discard getTok(p)
   else:
     raiseParseErr(p, "string or int for a enum")

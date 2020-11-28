@@ -94,4 +94,4 @@ proc jsonTo(s: Stream, t: typedesc[Bar]): Bar =
 - Custom pragmas are not supported. Unless `hasCustomPragma` improves, this feature won't be added.
 
 ## Acknowledgements
-- Thanks @krux02 for his review and valuable feedback. This rewrite wouldn't be possible without his work on `json.to`.
+- Thanks to @krux02 for his review and valuable feedback. This rewrite wouldn't be possible without his work on `json.to`.
