@@ -75,12 +75,10 @@ proc initFromJson*[T: enum](dst: var T; p: var JsonParser) =
 
 proc initFromJson*[T](dst: var seq[T]; p: var JsonParser) =
   eat(p, tkBracketLe)
-  var i = 0
   while p.tok != tkBracketRi:
     var tmp: T
     initFromJson(tmp, p)
     dst.add(tmp)
-    inc(i)
     if p.tok != tkComma: break
     discard getTok(p)
   eat(p, tkBracketRi)

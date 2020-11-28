@@ -84,6 +84,40 @@ proc jsonTo(s: Stream, t: typedesc[Bar]): Bar =
     close(p)
 ```
 
+## Used in parsing datasets for machine learning
+
+Designed originally as a way to parse JSON datasets directly into Tensors.
+It's still useful in this application.
+
+```nim
+type
+  Item = object
+    sepalLength: float32
+    sepalWidth: float32
+    petalLength: float32
+    petalWidth: float32
+    species: string
+
+template withJsonData(p, filename, body: untyped) =
+  # Opens filename and read an JSON array
+  var p: JsonParser
+  let s = newFileStream(filename)
+  open(p, s, filename)
+  discard getTok(p)
+  eat(p, tkBracketLe)
+  while p.tok != tkBracketRi:
+    body
+    if p.tok != tkComma: break
+    discard getTok(p)
+  eat(p, tkBracketRi)
+  eat(p, tkEof)
+
+var x: Item
+withJsonData(p, "iris.json"):
+  initFromJson(x, p) # JSON parser for Item generated at compile-time
+  # you have read an item from the iris dataset, use it to construct a Tensor
+```
+
 ## Limitations
 - Limited support of object variants. The discriminant field is expected first.
   Also there can be no fields before and after the case section.
