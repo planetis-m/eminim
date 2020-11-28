@@ -84,10 +84,11 @@ proc jsonTo(s: Stream, t: typedesc[Bar]): Bar =
     close(p)
 ```
 
-## Used in parsing datasets for machine learning
+## Machine Learning over JSON
 
-Designed originally as a way to parse JSON datasets directly into Tensors.
-It's still useful in this application.
+Inspired by the [Machine Learning over JSON](https://www.naftaliharris.com/blog/machine-learning-json/)
+article, I designed `eminim` as a way to parse JSON datasets directly into Tensors.
+It's still very capable in this application.
 
 ```nim
 type
@@ -99,23 +100,28 @@ type
     species: string
 
 template withJsonData(p, filename, body: untyped) =
-  # Opens filename and read an JSON array
-  var p: JsonParser
-  let s = newFileStream(filename)
-  open(p, s, filename)
-  discard getTok(p)
-  eat(p, tkBracketLe)
-  while p.tok != tkBracketRi:
-    body
-    if p.tok != tkComma: break
-    discard getTok(p)
-  eat(p, tkBracketRi)
-  eat(p, tkEof)
+  # Opens filename and reads an JSON array
+  let fs = newFileStream(filename)
+  if fs != nil:
+    var p: JsonParser
+    open(p, fs, filename)
+    try:
+      discard getTok(p)
+      eat(p, tkBracketLe)
+      while p.tok != tkBracketRi:
+        body
+        if p.tok != tkComma: break
+        discard getTok(p)
+      eat(p, tkBracketRi)
+      eat(p, tkEof)
+    finally:
+      close(p)
 
 var x: Item
 withJsonData(p, "iris.json"):
-  initFromJson(x, p) # JSON parser for Item generated at compile-time
-  # you have read an item from the iris dataset, use it to construct a Tensor
+  initFromJson(x, p) # parser for Item generated at compile-time
+  # you have read an item from the iris dataset,
+  # use it to construct a Tensor
 ```
 
 ## Limitations
