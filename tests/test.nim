@@ -35,6 +35,12 @@ type
   FooBar = ref object of BazFoo
     v: string
   Empty = object
+  IrisPlant = object
+    sepalLength: float32
+    sepalWidth: float32
+    petalLength: float32
+    petalWidth: float32
+    species: string
 
 block:
   let mynode = ContentNode(kind: P, pChildren: @[
@@ -79,6 +85,15 @@ block:
   let s = newStringStream("1")
   let a = s.jsonTo(Stuff)
   assert a == NotApple
+block:
+  let s = newStringStream("""[{
+    "sepalLength": 5.1,
+    "sepalWidth": 3.5,
+    "petalLength": 1.4,
+    "petalWidth": 0.2,
+    "species": "setosa"}]""")
+  for x in jsonItems(s, IrisPlant):
+    assert x.species == "setosa"
 #block:
   #proc initFromJson(dst: var Baz; p: var JsonParser) {.borrow.}
   #let s = newStringStream(""" "world" """)

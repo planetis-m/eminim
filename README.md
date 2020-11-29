@@ -2,9 +2,9 @@
 
 ## About
 
-This package provides a ``jsonTo`` proc which deserializes the specified type from a ``Stream``. It
-generates code, in compile time, to use directly the JsonParser, without creating intermediate `JsonNode` tree.
-Supports `options` and `tables`.
+This package provides the ``jsonTo`` proc and ``jsonItems`` iterator which deserializes
+the specified type from a ``Stream``. It generates code, in compile time, to use directly
+the JsonParser, without creating intermediate `JsonNode` tree. Supports `options` and `tables`.
 
 For example:
 
@@ -84,44 +84,25 @@ proc jsonTo(s: Stream, t: typedesc[Bar]): Bar =
     close(p)
 ```
 
-## Machine Learning over JSON
+## The jsonItems iterator
 
 Inspired by the [Machine Learning over JSON](https://www.naftaliharris.com/blog/machine-learning-json/)
-article, I designed `eminim` as a way to parse JSON datasets directly into Tensors.
+article, I originally designed `eminim` as a way to parse JSON datasets directly into Tensors.
 It's still very capable in this application.
 
 ```nim
 type
-  Item = object
+  IrisPlant = object
     sepalLength: float32
     sepalWidth: float32
     petalLength: float32
     petalWidth: float32
     species: string
 
-template withJsonData(p, filename, body: untyped) =
-  # Opens filename and reads an JSON array
-  let fs = newFileStream(filename)
-  if fs != nil:
-    var p: JsonParser
-    open(p, fs, filename)
-    try:
-      discard getTok(p)
-      eat(p, tkBracketLe)
-      while p.tok != tkBracketRi:
-        body
-        if p.tok != tkComma: break
-        discard getTok(p)
-      eat(p, tkBracketRi)
-      eat(p, tkEof)
-    finally:
-      close(p)
-
-var x: Item
-withJsonData(p, "iris.json"):
-  initFromJson(x, p) # parser for Item generated at compile-time
+let fs = newFileStream("iris.json")
+for x in jsonItems(fs, IrisPlant):
   # you have read an item from the iris dataset,
-  # use it to construct a Tensor
+  # use it to create a Tensor
 ```
 
 ## Limitations

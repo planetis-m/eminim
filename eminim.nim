@@ -252,3 +252,33 @@ proc jsonTo*[T](s: Stream, t: typedesc[T]): T =
     eat(p, tkEof)
   finally:
     close(p)
+
+template whileJsonItems(s, x, xType, body: untyped) =
+  # Opens filename and reads an JSON array
+  var p: JsonParser
+  open(p, s, "unknown file")
+  try:
+    discard getTok(p)
+    eat(p, tkBracketLe)
+    var x: xType
+    while p.tok != tkBracketRi:
+      initFromJson(x, p)
+      body
+      if p.tok != tkComma: break
+      discard getTok(p)
+    eat(p, tkBracketRi)
+    eat(p, tkEof)
+  finally:
+    close(p)
+
+macro jsonItems*(x: ForLoopStmt): untyped =
+  expectLen(x, 3)
+  let iterVar = x[0]
+  expectLen(x[1], 3)
+  let
+    iterType = x[1][2]
+    strmVar = x[1][1]
+  var body = x[^1]
+  if body.kind != nnkStmtList:
+    body = newTree(nnkStmtList, body)
+  result = newBlockStmt(getAst(whileJsonItems(strmVar, iterVar, iterType, body)))
