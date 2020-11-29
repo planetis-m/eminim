@@ -260,8 +260,8 @@ template whileJsonItems(s, x, xType, body: untyped) =
   try:
     discard getTok(p)
     eat(p, tkBracketLe)
-    var x: xType
     while p.tok != tkBracketRi:
+      var x: xType
       initFromJson(x, p)
       body
       if p.tok != tkComma: break
@@ -278,7 +278,5 @@ macro jsonItems*(x: ForLoopStmt): untyped =
   let
     iterType = x[1][2]
     strmVar = x[1][1]
-  var body = x[^1]
-  if body.kind != nnkStmtList:
-    body = newTree(nnkStmtList, body)
+    body = x[^1]
   result = newBlockStmt(getAst(whileJsonItems(strmVar, iterVar, iterType, body)))
