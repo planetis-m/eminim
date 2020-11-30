@@ -1,4 +1,4 @@
-import eminim, streams, parsejson
+import eminim, eminim/tojson, std/[streams, parsejson, enumerate, math]
 
 type
   Foo = ref object
@@ -41,13 +41,30 @@ type
     petalLength: float32
     petalWidth: float32
     species: string
+  Gender = enum
+    male, female
+  Relation = enum
+    biological, step
+  Responder = object
+    name: string
+    gender: Gender
+    occupation: string
+    age: int
+    siblings: seq[Sibling]
+  Sibling = object
+    sex: Gender
+    birth_year: int
+    relation: Relation
+    alive: bool
 
 block:
   let mynode = ContentNode(kind: P, pChildren: @[
     ContentNode(kind: Text, textStr: "mychild"),
     ContentNode(kind: Br)
   ])
-  let s = newStringStream("""{"kind":"P","pChildren":[{"kind":"Text","textStr":"mychild"},{"kind":"Br"}]}""")
+  let s = newStringStream()
+  s.jsonFrom(mynode)
+  s.setPosition(0)
   let a = s.jsonTo(ContentNode)
   assert $a == $mynode
 block:
@@ -86,14 +103,32 @@ block:
   let a = s.jsonTo(Stuff)
   assert a == NotApple
 block:
-  let s = newStringStream("""[{
-    "sepalLength": 5.1,
-    "sepalWidth": 3.5,
-    "petalLength": 1.4,
-    "petalWidth": 0.2,
-    "species": "setosa"}]""")
-  for x in jsonItems(s, IrisPlant):
-    assert x.species == "setosa"
+  let data = @[
+    IrisPlant(sepalLength: 5.1, sepalWidth: 3.5, petalLength: 1.4, petalWidth: 0.2, species: "setosa"),
+    IrisPlant(sepalLength: 4.9, sepalWidth: 3.0, petalLength: 1.4, petalWidth: 0.2, species: "setosa")]
+  let s = newStringStream()
+  s.jsonFrom(data)
+  s.setPosition(0)
+  for (i, x) in enumerate(jsonItems(s, IrisPlant)):
+    if i == 0:
+      assert x.species == "setosa"
+      assert almostEqual(x.sepalWidth, 3.5'f32)
+    else:
+      assert almostEqual(x.sepalWidth, 3'f32)
+block:
+  let data = [
+    Responder(name: "John Smith", gender: male, occupation: "student", age: 18,
+      siblings: @[Sibling(sex: female, birth_year: 1991, relation: biological, alive: true),
+                  Sibling(sex: male, birth_year: 1989, relation: step, alive: true)])]
+  var responders: seq[Responder]
+  let s = newStringStream()
+  s.jsonFrom(data)
+  s.setPosition(0)
+  for x in jsonItems(s, Responder):
+    responders.add x
+  assert responders.len == 1
+  assert responders[0].gender == male
+  assert responders[0].siblings.len == 2
 #block:
   #proc initFromJson(dst: var Baz; p: var JsonParser) {.borrow.}
   #let s = newStringStream(""" "world" """)

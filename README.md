@@ -4,7 +4,8 @@
 
 This package provides the ``jsonTo`` proc and ``jsonItems`` iterator which deserializes
 the specified type from a ``Stream``. It generates code, in compile time, to use directly
-the JsonParser, without creating intermediate `JsonNode` tree. Supports `options` and `tables`.
+the JsonParser, without creating intermediate `JsonNode` tree. Supports `options`, `sets` and `tables`.
+**Experimental**: Import `eminim/tojson` for proc `jsonFrom` to write a variable directly into `Stream`.
 
 For example:
 

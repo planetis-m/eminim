@@ -1,19 +1,4 @@
-import macros, parsejson, streams, strutils, options, tables
-
-proc initFromJson*(dst: var string; p: var JsonParser)
-proc initFromJson*(dst: var char; p: var JsonParser)
-proc initFromJson*(dst: var bool; p: var JsonParser)
-#proc initFromJson*(dst: var JsonNode; p: var JsonParser)
-proc initFromJson*[T: SomeInteger](dst: var T; p: var JsonParser)
-proc initFromJson*[T: SomeFloat](dst: var T; p: var JsonParser)
-proc initFromJson*[T: enum](dst: var T; p: var JsonParser)
-proc initFromJson*[T](dst: var seq[T]; p: var JsonParser)
-proc initFromJson*[S, T](dst: var array[S, T]; p: var JsonParser)
-proc initFromJson*[T](dst: var (Table[string, T]|OrderedTable[string, T]); p: var JsonParser)
-proc initFromJson*[T](dst: var ref T; p: var JsonParser)
-proc initFromJson*[T](dst: var Option[T]; p: var JsonParser)
-#proc initFromJson*[T: distinct](dst: var T; p: var JsonParser)
-proc initFromJson*[T: object|tuple](dst: var T; p: var JsonParser)
+import macros, parsejson, streams, strutils, options, tables, sets
 
 proc initFromJson*(dst: var string; p: var JsonParser) =
   if p.tok == tkNull:
@@ -95,6 +80,16 @@ proc initFromJson*[S, T](dst: var array[S, T]; p: var JsonParser) =
     raise newException(RangeDefect, "array not filled")
   eat(p, tkBracketRi)
 
+proc initFromJson*[T](dst: var SomeSet[T]; p: var JsonParser) =
+  eat(p, tkBracketLe)
+  while p.tok != tkBracketRi:
+    var tmp: T
+    initFromJson(tmp, p)
+    dst.incl(tmp)
+    if p.tok != tkComma: break
+    discard getTok(p)
+  eat(p, tkBracketRi)
+
 proc initFromJson*[T](dst: var (Table[string, T]|OrderedTable[string, T]); p: var JsonParser) =
   eat(p, tkCurlyLe)
   while p.tok != tkCurlyRi:
@@ -130,8 +125,7 @@ proc detectIncompatibleType(typeExpr: NimNode) =
     error("Use a named tuple instead of: " & typeExpr.repr)
 
 template readFieldsInner(parser, body) =
-  if p.tok != tkComma:
-    break
+  if p.tok != tkComma: break
   discard getTok(p)
   while parser.tok != tkCurlyRi:
     if parser.tok != tkString:
