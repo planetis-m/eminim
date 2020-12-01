@@ -3,9 +3,30 @@
 ## About
 
 This package provides the ``jsonTo`` proc and ``jsonItems`` iterator which deserializes
-the specified type from a ``Stream``. It generates code, in compile time, to use directly
-the JsonParser, without creating intermediate `JsonNode` tree. Supports `options`, `sets` and `tables`.
-**Experimental**: Import `eminim/tojson` for proc `jsonFrom` to write a variable directly into `Stream`.
+the specified type from a ``Stream``. The `jsonFrom` procs are used to write the JSON
+representation of a variable directly into a `Stream`. Both `initFromJson` and `jsonFrom`
+procs can be overloaded. Supports `options`, `sets` and `tables`.
+
+## Usage
+
+```nim
+import std/streams, eminim
+
+type
+  Foo = ref object
+    value: int
+    next: Foo
+
+let d = Foo(value: 1, next: Foo(value: 2, next: nil))
+let s = newStringStream()
+# Make a roundtrip
+s.fromJson(d) # "writes JSON from a variable"
+s.setPosition(0)
+let a = s.jsonTo(Foo) # "reads JSON to type"
+```
+
+It generates code, in compile time, to use directly the JsonParser, without creating an
+intermediate `JsonNode` tree.
 
 For example:
 
@@ -114,6 +135,10 @@ for x in jsonItems(fs, IrisPlant):
 - Distinct types are supposed to work by overloading (or borrowing) proc `initFromJson[T](dst: var T; p: var JsonParser)`.
   Not currently working. Blocked by a Nim bug.
 - Custom pragmas are not supported. Unless `hasCustomPragma` improves, this feature won't be added.
+
+## Features
+- Serializing and deserializing directly into `Streams`.
+- Overloading for (de)serializing a custom object. See `examples/jsonprocs.nim`
 
 ## Acknowledgements
 - Thanks to @krux02 for his review and valuable feedback. This rewrite wouldn't be possible without his work on `json.to`.

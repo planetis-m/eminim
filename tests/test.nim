@@ -1,4 +1,4 @@
-import eminim, eminim/tojson, std/[streams, parsejson, enumerate, math]
+import eminim, std/[streams, parsejson, enumerate, math]
 
 type
   Foo = ref object
@@ -57,6 +57,9 @@ type
     relation: Relation
     alive: bool
 
+#proc jsonFrom(s: Stream; o: IrisPlant) =
+  #s.write "{}"
+
 block:
   let mynode = ContentNode(kind: P, pChildren: @[
     ContentNode(kind: Text, textStr: "mychild"),
@@ -103,8 +106,6 @@ block:
   let a = s.jsonTo(Stuff)
   assert a == NotApple
 block:
-  #proc jsonFrom(s: Stream; o: IrisPlant) =
-    #s.write "{}"
   let data = @[
     IrisPlant(sepalLength: 5.1, sepalWidth: 3.5, petalLength: 1.4,
               petalWidth: 0.2, species: "setosa"),
