@@ -61,36 +61,44 @@ type
   #s.write "{}"
 
 block:
-  let mynode = ContentNode(kind: P, pChildren: @[
+  let data = ContentNode(kind: P, pChildren: @[
     ContentNode(kind: Text, textStr: "mychild"),
     ContentNode(kind: Br)
   ])
   let s = newStringStream()
-  s.jsonFrom(mynode)
+  s.jsonFrom(data)
   s.setPosition(0)
   let a = s.jsonTo(ContentNode)
-  assert $a == $mynode
+  assert $a == $data
 block:
-  let s = newStringStream("""{"kind":"Apple","apple":"world"}""")
+  let data = Bar(kind: Apple, apple: "world")
+  let s = newStringStream()
+  s.jsonFrom(data)
+  s.setPosition(0)
   let a = s.jsonTo(Bar)
   assert a.kind == Apple
   assert a.apple == "world"
 block:
-  let s = newStringStream("""{"value":1,"next":{"value":2,"next":{}}}""")
+  let data = Foo(value: 1, next: Foo(value: 2, next: nil))
+  let s = newStringStream()
+  s.jsonFrom(data)
+  s.setPosition(0)
   let a = s.jsonTo(Foo)
   assert a.value == 1
   let b = a.next
   assert b.value == 2
 block:
-  let s = newStringStream("""{"value": 42}""")
-  let a = s.jsonTo(Foo)
-  assert(a != nil and a.value == 42)
-block:
-  let s = newStringStream("[0, 1, 2, 3, 4, 5, 6]")
+  let data = [0, 1, 2, 3, 4, 5, 6]
+  let s = newStringStream()
+  s.jsonFrom(data)
+  s.setPosition(0)
   let a = s.jsonTo(BarBaz)
-  assert a == [0, 1, 2, 3, 4, 5, 6]
+  assert a == data
 block:
-  let s = newStringStream("""{"v":"hello","t":1.0}""")
+  let data = FooBar(v: "hello", t: 1.0)
+  let s = newStringStream()
+  s.jsonFrom(data)
+  s.setPosition(0)
   let a = s.jsonTo(FooBar)
   assert a.v == "hello"
   assert a.t == 1.0
@@ -102,9 +110,12 @@ block:
   let a = s.jsonTo(tuple[x:int])
   assert(a[0] == 42)
 block:
-  let s = newStringStream("1")
+  let data = NotApple
+  let s = newStringStream()
+  s.jsonFrom(data)
+  s.setPosition(0)
   let a = s.jsonTo(Stuff)
-  assert a == NotApple
+  assert a == data
 block:
   let data = @[
     IrisPlant(sepalLength: 5.1, sepalWidth: 3.5, petalLength: 1.4,

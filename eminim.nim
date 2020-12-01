@@ -106,7 +106,6 @@ proc jsonFrom*(s: Stream; o: object) =
   s.write "}"
 
 # deserialization
-
 proc initFromJson*(dst: var string; p: var JsonParser) =
   if p.tok == tkNull:
     dst = ""

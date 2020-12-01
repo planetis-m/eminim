@@ -20,7 +20,7 @@ type
 let d = Foo(value: 1, next: Foo(value: 2, next: nil))
 let s = newStringStream()
 # Make a roundtrip
-s.fromJson(d) # "writes JSON from a variable"
+s.jsonFrom(d) # "writes JSON from a variable"
 s.setPosition(0)
 let a = s.jsonTo(Foo) # "reads JSON to type"
 ```
@@ -135,6 +135,7 @@ for x in jsonItems(fs, IrisPlant):
 - Distinct types are supposed to work by overloading (or borrowing) proc `initFromJson[T](dst: var T; p: var JsonParser)`.
   Not currently working. Blocked by a Nim bug.
 - Custom pragmas are not supported. Unless `hasCustomPragma` improves, this feature won't be added.
+  You can currently substitute skipped fields by creating empty overloads.
 
 ## Features
 - Serializing and deserializing directly into `Streams`.
