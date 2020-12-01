@@ -103,9 +103,13 @@ block:
   let a = s.jsonTo(Stuff)
   assert a == NotApple
 block:
+  #proc jsonFrom(s: Stream; o: IrisPlant) =
+    #s.write "{}"
   let data = @[
-    IrisPlant(sepalLength: 5.1, sepalWidth: 3.5, petalLength: 1.4, petalWidth: 0.2, species: "setosa"),
-    IrisPlant(sepalLength: 4.9, sepalWidth: 3.0, petalLength: 1.4, petalWidth: 0.2, species: "setosa")]
+    IrisPlant(sepalLength: 5.1, sepalWidth: 3.5, petalLength: 1.4,
+              petalWidth: 0.2, species: "setosa"),
+    IrisPlant(sepalLength: 4.9, sepalWidth: 3.0, petalLength: 1.4,
+              petalWidth: 0.2, species: "setosa")]
   let s = newStringStream()
   s.jsonFrom(data)
   s.setPosition(0)
