@@ -1,4 +1,4 @@
-import macros, parsejson, streams, options, tables, sets
+import macros, parsejson, strutils, streams, options, tables, sets
 
 # serialization
 proc escapeJsonUnquoted*(x: string; s: Stream) =
