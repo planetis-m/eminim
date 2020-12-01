@@ -4,7 +4,12 @@
 This package provides the ``jsonTo`` proc and ``jsonItems`` iterator which deserializes
 the specified type from a ``Stream``. The `jsonFrom` procs are used to write the JSON
 representation of a variable directly into a `Stream`. Both `initFromJson` and `jsonFrom`
-procs can be overloaded. Supports `options`, `sets` and `tables`.
+procs can be overloaded.
+
+## Features
+- Serializing and deserializing directly into `Streams`. For common cases it is done automatically.
+- Supports `options`, `sets` and `tables` by default.
+- Overloading for (de)serializing a custom object. See <examples/jsonprocs.nim>
 
 ## Usage
 
@@ -23,6 +28,8 @@ s.jsonFrom(d) # "writes JSON from a variable"
 s.setPosition(0)
 let a = s.jsonTo(Foo) # "reads JSON to type"
 ```
+
+## How it works
 
 It generates code, in compile time, to use directly the JsonParser, without creating an
 intermediate `JsonNode` tree.
@@ -135,10 +142,6 @@ for x in jsonItems(fs, IrisPlant):
   Not currently working. Blocked by a Nim bug.
 - Custom pragmas are not supported. Unless `hasCustomPragma` improves, this feature won't be added.
   You can currently substitute skipped fields by creating empty overloads.
-
-## Features
-- Serializing and deserializing directly into `Streams`. For common cases it is done automatically.
-- Overloading for (de)serializing a custom object. See `examples/jsonprocs.nim`
 
 ## Acknowledgements
 - Thanks to @krux02 for his review and valuable feedback. This rewrite wouldn't be possible without his work on `json.to`.
