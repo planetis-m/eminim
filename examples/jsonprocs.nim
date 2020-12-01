@@ -1,14 +1,14 @@
 import parsejson, streams, eminim, manu/matrix
 
-proc jsonFrom*[T](s: Stream; m: Matrix[T]) =
+proc storeJson*[T](s: Stream; m: Matrix[T]) =
   s.write "{"
   escapeJson(s, "m")
   s.write ":"
-  jsonFrom(s, m.m)
+  storeJson(s, m.m)
   s.write ","
   escapeJson(s, "n")
   s.write ":"
-  jsonFrom(s, m.n)
+  storeJson(s, m.n)
   s.write ","
   escapeJson(s, "data")
   s.write ":"
@@ -17,7 +17,7 @@ proc jsonFrom*[T](s: Stream; m: Matrix[T]) =
   for i in 0 ..< m.m * m.n:
     if comma: s.write ","
     else: comma = true
-    jsonFrom(s, m.data[i])
+    storeJson(s, m.data[i])
   s.write "]"
   s.write "}"
 
@@ -56,7 +56,7 @@ proc initFromJson*[T](dst: var Matrix[T]; p: var JsonParser) =
 proc main =
    let x = matrix(2, @[0'f32, 1, 2, 3, 4, 5, 6, 7])
    let s = newStringStream()
-   s.jsonFrom(x)
+   s.storeJson(x)
    s.setPosition(0)
    let nx = s.jsonTo(Matrix[float32])
    asert x == nx

@@ -58,7 +58,7 @@ type
     relation: Relation
     alive: bool
 
-#proc jsonFrom(s: Stream; o: IrisPlant) =
+#proc storeJson(s: Stream; o: IrisPlant) =
   #s.write "{}"
 
 block:
@@ -67,14 +67,14 @@ block:
     ContentNode(kind: Br)
   ])
   let s = newStringStream()
-  s.jsonFrom(data)
+  s.storeJson(data)
   s.setPosition(0)
   let a = s.jsonTo(ContentNode)
   assert $a == $data
 block:
   let data = Bar(kind: Apple, apple: "world")
   let s = newStringStream()
-  s.jsonFrom(data)
+  s.storeJson(data)
   s.setPosition(0)
   let a = s.jsonTo(Bar)
   assert a.kind == Apple
@@ -82,7 +82,7 @@ block:
 block:
   let data = Foo(value: 1, next: Foo(value: 2, next: nil))
   let s = newStringStream()
-  s.jsonFrom(data)
+  s.storeJson(data)
   s.setPosition(0)
   let a = s.jsonTo(Foo)
   assert a.value == 1
@@ -91,14 +91,14 @@ block:
 block:
   let data = [0, 1, 2, 3, 4, 5, 6]
   let s = newStringStream()
-  s.jsonFrom(data)
+  s.storeJson(data)
   s.setPosition(0)
   let a = s.jsonTo(BarBaz)
   assert a == data
 block:
   let data = FooBar(v: "hello", t: 1.0)
   let s = newStringStream()
-  s.jsonFrom(data)
+  s.storeJson(data)
   s.setPosition(0)
   let a = s.jsonTo(FooBar)
   assert a.v == "hello"
@@ -113,7 +113,7 @@ block:
 block:
   let data = NotApple
   let s = newStringStream()
-  s.jsonFrom(data)
+  s.storeJson(data)
   s.setPosition(0)
   let a = s.jsonTo(Stuff)
   assert a == data
@@ -124,7 +124,7 @@ block:
     IrisPlant(sepalLength: 4.9, sepalWidth: 3.0, petalLength: 1.4,
               petalWidth: 0.2, species: "setosa")]
   let s = newStringStream()
-  s.jsonFrom(data)
+  s.storeJson(data)
   s.setPosition(0)
   for (i, x) in enumerate(jsonItems(s, IrisPlant)):
     if i == 0:
@@ -139,7 +139,7 @@ block:
                   Sibling(sex: male, birth_year: 1989, relation: step, alive: true)])]
   var responders: seq[Responder]
   let s = newStringStream()
-  s.jsonFrom(data)
+  s.storeJson(data)
   s.setPosition(0)
   for x in jsonItems(s, Responder):
     responders.add x

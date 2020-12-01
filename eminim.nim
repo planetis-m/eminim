@@ -29,47 +29,47 @@ proc newJNull*(s: Stream) =
   ## Creates a new `JNull JsonNode`.
   s.write "null"
 
-proc jsonFrom*(s: Stream; x: string) =
+proc storeJson*(s: Stream; x: string) =
   ## Creates a new `JString JsonNode`.
   escapeJson(s, x)
 
-proc jsonFrom*(s: Stream; b: bool) =
+proc storeJson*(s: Stream; b: bool) =
   ## Creates a new `JBool JsonNode`.
   s.write if b: "true" else: "false"
 
-proc jsonFrom*(s: Stream; n: BiggestInt) =
+proc storeJson*(s: Stream; n: BiggestInt) =
   ## Creates a new `JInt JsonNode`.
   s.write $n
 
-proc jsonFrom*(s: Stream; n: float) =
+proc storeJson*(s: Stream; n: float) =
   ## Creates a new `JFloat JsonNode`.
   s.write $n
 
-proc jsonFrom*(s: Stream; o: enum) =
+proc storeJson*(s: Stream; o: enum) =
   ## Construct a JsonNode that represents the specified enum value as a
   ## string. Creates a new ``JString JsonNode``.
-  jsonFrom(s, $o)
+  storeJson(s, $o)
 
-proc jsonFrom*[T](s: Stream; elements: openArray[T]) =
+proc storeJson*[T](s: Stream; elements: openArray[T]) =
   ## Generic constructor for JSON data. Creates a new `JArray JsonNode`
   var comma = false
   s.write "["
   for elem in elements:
     if comma: s.write ","
     else: comma = true
-    jsonFrom(s, elem)
+    storeJson(s, elem)
   s.write "]"
 
-proc jsonFrom*[T](s: Stream; o: SomeSet[T]) =
+proc storeJson*[T](s: Stream; o: SomeSet[T]) =
   var comma = false
   s.write "["
   for elem in o.items:
     if comma: s.write ","
     else: comma = true
-    jsonFrom(s, elem)
+    storeJson(s, elem)
   s.write "]"
 
-proc jsonFrom*[T](s: Stream; o: (Table[string, T]|OrderedTable[string, T])) =
+proc storeJson*[T](s: Stream; o: (Table[string, T]|OrderedTable[string, T])) =
   var comma = false
   s.write "{"
   for k, v in o.pairs:
@@ -77,23 +77,23 @@ proc jsonFrom*[T](s: Stream; o: (Table[string, T]|OrderedTable[string, T])) =
     else: comma = true
     escapeJson(s, k)
     s.write ":"
-    jsonFrom(s, v)
+    storeJson(s, v)
   s.write "}"
 
-proc jsonFrom*(s: Stream; o: ref object) =
+proc storeJson*(s: Stream; o: ref object) =
   ## Generic constructor for JSON data. Creates a new `JObject JsonNode`
   if o.isNil:
     s.newJNull()
   else:
-    jsonFrom(s, o[])
+    storeJson(s, o[])
 
-proc jsonFrom*[T](s: Stream; o: Option[T]) =
+proc storeJson*[T](s: Stream; o: Option[T]) =
   if isSome(o):
-    jsonFrom(s, get(o))
+    storeJson(s, get(o))
   else:
     s.newJNull()
 
-proc jsonFrom*(s: Stream; o: object) =
+proc storeJson*(s: Stream; o: object) =
   ## Generic constructor for JSON data. Creates a new `JObject JsonNode`
   var comma = false
   s.write "{"
@@ -102,7 +102,7 @@ proc jsonFrom*(s: Stream; o: object) =
     else: comma = true
     escapeJson(s, k)
     s.write ":"
-    jsonFrom(s, v)
+    storeJson(s, v)
   s.write "}"
 
 # deserialization

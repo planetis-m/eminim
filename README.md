@@ -2,12 +2,13 @@
 ## About
 
 This package provides the ``jsonTo`` proc and ``jsonItems`` iterator which deserializes
-the specified type from a ``Stream``. The `jsonFrom` procs are used to write the JSON
-representation of a variable directly into a `Stream`. Both `initFromJson` and `jsonFrom`
+the specified type from a ``Stream``. The `storeJson` procs are used to write the JSON
+representation of a location directly into a `Stream`. Both `initFromJson` and `storeJson`
 procs can be overloaded.
 
 ## Features
 - Serializing and deserializing directly into `Streams`. For common cases it is done automatically.
+  Generally speaking intervation is needed when working with `ptr` types.
 - Supports `options`, `sets` and `tables` by default.
 - Overloading for (de)serializing a custom object. See <examples/jsonprocs.nim>
 
@@ -24,9 +25,9 @@ type
 let d = Foo(value: 1, next: Foo(value: 2, next: nil))
 let s = newStringStream()
 # Make a roundtrip
-s.jsonFrom(d) # "writes JSON from a variable"
+s.storeJson(d) # writes JSON from a location
 s.setPosition(0)
-let a = s.jsonTo(Foo) # "reads JSON to type"
+let a = s.jsonTo(Foo) # reads JSON and transform to a type
 ```
 
 ## How it works
