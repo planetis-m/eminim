@@ -1,4 +1,4 @@
-import macros, parsejson, streams, strutils, options, tables, sets
+import macros, parsejson, streams, options, tables, sets
 
 # serialization
 proc escapeJsonUnquoted*(x: string; s: Stream) =
@@ -43,7 +43,7 @@ proc jsonFrom*(s: Stream; n: BiggestInt) =
 
 proc jsonFrom*(s: Stream; n: float) =
   ## Creates a new `JFloat JsonNode`.
-  s.write formatFloat(n)
+  s.write $n
 
 proc jsonFrom*(s: Stream; o: enum) =
   ## Construct a JsonNode that represents the specified enum value as a

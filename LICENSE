@@ -1,4 +1,4 @@
-Eminim -- a deserialization macro for nim
+Eminim -- JSON marshal module for Nim
 
 (c) Copyright 2019-2020 Antonis Geralis. All rights reserved.
 

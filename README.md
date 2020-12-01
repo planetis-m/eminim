@@ -1,5 +1,4 @@
-# Eminim — JSON deserialization macro for Nim
-
+# Eminim — JSON marshal module for Nim
 ## About
 
 This package provides the ``jsonTo`` proc and ``jsonItems`` iterator which deserializes
@@ -138,7 +137,7 @@ for x in jsonItems(fs, IrisPlant):
   You can currently substitute skipped fields by creating empty overloads.
 
 ## Features
-- Serializing and deserializing directly into `Streams`.
+- Serializing and deserializing directly into `Streams`. For common cases it is done automatically.
 - Overloading for (de)serializing a custom object. See `examples/jsonprocs.nim`
 
 ## Acknowledgements

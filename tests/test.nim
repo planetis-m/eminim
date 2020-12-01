@@ -33,6 +33,7 @@ type
     t: float
   BazFoo = ref object of BarFoo
   FooBar = ref object of BazFoo
+    x: int
     v: string
   Empty = object
   IrisPlant = object
