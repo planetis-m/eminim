@@ -251,7 +251,8 @@ template readFieldsInner(parser, body) =
     discard getTok(parser)
 
 template raiseWrongKey(parser) =
-  raiseParseErr(parser, "valid object field")
+  when defined(eminimLenient): discard
+  else: raiseParseErr(parser, "valid object field")
 
 template getFieldValue(parser, tmpSym, fieldSym) =
   discard getTok(parser)
@@ -265,12 +266,15 @@ template getKindValue(parser, tmpSym, kindSym, kindType) =
   initFromJson(kindTmp, parser)
   tmpSym = (typeof tmpSym)(kindSym: kindTmp)
 
+template caseANormalized: untyped =
+  nnkCaseStmt.newTree(newCall(bindSym"nimIdentNormalize", newDotExpr(parser, ident"a")))
+
 proc foldObjectBody(typeNode, tmpSym, parser: NimNode): NimNode =
   case typeNode.kind
   of nnkEmpty:
     result = newNimNode(nnkNone)
   of nnkRecList, nnkTupleTy:
-    result = nnkCaseStmt.newTree(newDotExpr(parser, ident"a"))
+    result = caseANormalized()
     for it in typeNode:
       let x = foldObjectBody(it, tmpSym, parser)
       if x.kind != nnkNone: result.add x
@@ -280,12 +284,12 @@ proc foldObjectBody(typeNode, tmpSym, parser: NimNode): NimNode =
     let fieldSym = typeNode[0]
     let fieldType = typeNode[1]
     detectIncompatibleType(fieldType)
-    result = nnkOfBranch.newTree(newLit(fieldSym.strVal),
+    result = nnkOfBranch.newTree(newLit(nimIdentNormalize(fieldSym.strVal)),
         getAst(getFieldValue(parser, tmpSym, fieldSym)))
   of nnkRecCase:
     let kindSym = typeNode[0][0]
     let kindType = typeNode[0][1]
-    result = nnkOfBranch.newTree(newLit(kindSym.strVal),
+    result = nnkOfBranch.newTree(newLit(nimIdentNormalize(kindSym.strVal)),
         getAst(getKindValue(parser, tmpSym, kindSym, kindType)))
     let inner = nnkCaseStmt.newTree(nnkDotExpr.newTree(tmpSym, kindSym))
     for i in 1..<typeNode.len:
@@ -298,7 +302,7 @@ proc foldObjectBody(typeNode, tmpSym, parser: NimNode): NimNode =
       result.add copyNimTree(typeNode[i])
     let inner = newNimNode(nnkStmtListExpr)
     if typeNode[^1].kind == nnkIdentDefs:
-      inner.add nnkCaseStmt.newTree(newDotExpr(parser, ident"a"))
+      inner.add caseANormalized()
     let x = foldObjectBody(typeNode[^1], tmpSym, parser)
     if x.kind == nnkCaseStmt: inner.add x
     elif x.kind != nnkNone: inner[^1].add x
