@@ -1,6 +1,5 @@
 # Eminim — JSON marshal module for Nim
 ## About
-
 This package provides the ``jsonTo``, ``loadJson`` procs and ``jsonItems`` iterator which deserializes
 the specified type from a ``Stream``. The `storeJson` procs are used to write the JSON
 representation of a location into a `Stream`. Low level `initFromJson` and `storeJson`
@@ -24,17 +23,14 @@ s.setPosition(0)
 let a = s.jsonTo(Foo) # reads JSON and transform to a type
 # Alternatively load directly into a location
 s.setPosition(0)
-var a: Foo
-s.loadJson(a)
+var b: Foo
+s.loadJson(b)
 ```
 
 ## Features
 - Serializing and deserializing directly into `Streams`. For common usage it is done automatically.
   Generally speaking intervation is needed when working with `ptr` types.
 - Supports `options`, `sets` and `tables` by default.
-- Strict field checking can be disabled at compile-time with `-d:eminimLenient`.
-  Meaning you can parse complex JSON structures like the `World Bank dataset` and
-  retrieve only the fields you're interested.
 - Uses nim identifier equality algorithm to compare JSON fields.
   Which means fields written in camelCase or snake_case are equal.
 - Overloading serialization procs. See [jsonprocs.nim](examples/jsonprocs.nim)
@@ -150,4 +146,5 @@ for x in jsonItems(fs, IrisPlant):
   You can currently substitute skipped fields by creating empty overloads.
 
 ## Acknowledgements
-- Thanks to @krux02 for his review and valuable feedback. This rewrite wouldn't be possible without his work on `json.to`.
+- Thanks to @krux02 for his review and valuable feedback. This rewrite wouldn't
+  be possible without his work on `json.to`.

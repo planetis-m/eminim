@@ -26,32 +26,32 @@ proc escapeJson*(s: Stream; x: string) =
   s.write("\"")
 
 proc newJNull*(s: Stream) =
-  ## Creates a new `JNull JsonNode`.
+  ## Creates a new JNull.
   s.write "null"
 
 proc storeJson*(s: Stream; x: string) =
-  ## Creates a new `JString JsonNode`.
+  ## Creates a new JString.
   escapeJson(s, x)
 
 proc storeJson*(s: Stream; b: bool) =
-  ## Creates a new `JBool JsonNode`.
+  ## Creates a new JBool.
   s.write if b: "true" else: "false"
 
 proc storeJson*(s: Stream; n: BiggestInt) =
-  ## Creates a new `JInt JsonNode`.
+  ## Creates a new JInt.
   s.write $n
 
 proc storeJson*(s: Stream; n: float) =
-  ## Creates a new `JFloat JsonNode`.
+  ## Creates a new JFloat.
   s.write $n
 
 proc storeJson*(s: Stream; o: enum) =
-  ## Construct a JsonNode that represents the specified enum value as a
-  ## string. Creates a new ``JString JsonNode``.
+  ## Construct a Json that represents the specified enum value as a
+  ## int. Creates a new JInt.
   storeJson(s, int(o))
 
 proc storeJson*[T](s: Stream; elements: openArray[T]) =
-  ## Generic constructor for JSON data. Creates a new `JArray JsonNode`
+  ## Generic constructor for JSON data. Creates a new JArray.
   var comma = false
   s.write "["
   for elem in elements:
@@ -81,7 +81,7 @@ proc storeJson*[T](s: Stream; o: (Table[string, T]|OrderedTable[string, T])) =
   s.write "}"
 
 proc storeJson*(s: Stream; o: ref object) =
-  ## Generic constructor for JSON data. Creates a new `JObject JsonNode`
+  ## Generic constructor for JSON data. Creates a new JObject
   if o.isNil:
     s.newJNull()
   else:
@@ -94,7 +94,7 @@ proc storeJson*[T](s: Stream; o: Option[T]) =
     s.newJNull()
 
 proc storeJson*(s: Stream; o: object) =
-  ## Generic constructor for JSON data. Creates a new `JObject JsonNode`
+  ## Generic constructor for JSON data. Creates a new JObject
   var comma = false
   s.write "{"
   for k, v in o.fieldPairs:
@@ -251,8 +251,7 @@ template readFieldsInner(parser, body) =
     discard getTok(parser)
 
 template raiseWrongKey(parser) =
-  when defined(eminimLenient): discard
-  else: raiseParseErr(parser, "valid object field")
+  raiseParseErr(parser, "valid object field")
 
 template getFieldValue(parser, tmpSym, fieldSym) =
   discard getTok(parser)
@@ -350,7 +349,7 @@ proc initFromJson*[T: object|tuple](dst: var T; p: var JsonParser) =
   eat(p, tkCurlyRi)
 
 proc jsonTo*[T](s: Stream, t: typedesc[T]): T =
-  ## Unmarshals the specified node into the object type specified.
+  ## Unmarshals the specified Stream into the type specified.
   ##
   ## Known limitations:
   ##
@@ -368,7 +367,7 @@ proc jsonTo*[T](s: Stream, t: typedesc[T]): T =
     close(p)
 
 proc loadJson*[T](s: Stream, dst: var T) =
-  ## Unmarshals the specified node into the object specified.
+  ## Unmarshals the specified Stream into the location specified.
   var p: JsonParser
   open(p, s, "unknown file")
   try:
@@ -379,7 +378,6 @@ proc loadJson*[T](s: Stream, dst: var T) =
     close(p)
 
 template whileJsonItems(s, x, xType, body: untyped) =
-  # Opens filename and reads an JSON array
   var p: JsonParser
   open(p, s, "unknown file")
   try:
@@ -397,6 +395,7 @@ template whileJsonItems(s, x, xType, body: untyped) =
     close(p)
 
 macro jsonItems*(x: ForLoopStmt): untyped =
+  ## Unmarshals a JArray into the type specified, one items at a time.
   expectLen(x, 3)
   let iterVar = x[0]
   expectLen(x[1], 3)
