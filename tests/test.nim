@@ -96,6 +96,13 @@ block:
   let a = s.jsonTo(BarBaz)
   assert a == data
 block:
+  let data: array[Fruit, int] = [0, 1, 2]
+  let s = newStringStream()
+  s.storeJson(data)
+  s.setPosition(0)
+  let a = s.jsonTo(array[Fruit, int])
+  assert a == data
+block:
   let data = FooBar(v: "hello", t: 1.0)
   let s = newStringStream()
   s.storeJson(data)

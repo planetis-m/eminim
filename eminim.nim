@@ -176,14 +176,14 @@ proc initFromJson*[T](dst: var seq[T]; p: var JsonParser) =
 
 proc initFromJson*[S, T](dst: var array[S, T]; p: var JsonParser) =
   eat(p, tkBracketLe)
-  var i: int = low(dst)
+  var i: int = low(dst).ord
   while p.tok != tkBracketRi:
-    initFromJson(dst[i], p)
+    initFromJson(dst[S(i)], p)
     inc(i)
     if p.tok != tkComma: break
     discard getTok(p)
-  if i <= high(dst):
-    raise newException(RangeDefect, "array not filled")
+  #if i <= high(dst):
+    #raise newException(RangeDefect, "array not filled")
   eat(p, tkBracketRi)
 
 proc initFromJson*[T](dst: var set[T]; p: var JsonParser) =
@@ -359,6 +359,17 @@ proc jsonTo*[T](s: Stream, t: typedesc[T]): T =
   try:
     discard getTok(p)
     initFromJson(result, p)
+    eat(p, tkEof)
+  finally:
+    close(p)
+
+proc loadJson*[T](s: Stream, dst: var T) =
+  ## Unmarshals the specified node into the object specified.
+  var p: JsonParser
+  open(p, s, "unknown file")
+  try:
+    discard getTok(p)
+    initFromJson(dst, p)
     eat(p, tkEof)
   finally:
     close(p)

@@ -48,6 +48,8 @@ proc initFromJson*[T](dst: var Matrix[T]; p: var JsonParser) =
         if p.tok != tkComma: break
         discard getTok(p)
       eat(p, tkBracketRi)
+    else:
+      raiseParseErr(p, "valid object field")
     if p.tok != tkComma: break
     discard getTok(p)
   eat(p, tkCurlyRi)
