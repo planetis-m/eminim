@@ -144,8 +144,8 @@ for x in jsonItems(fs, IrisPlant):
   Also there can be no fields before and after the case section.
   In all other cases it fails with a `JsonParserError`. This limitation is hard to improve.
   The current state might fit some use-cases and it's better than nothing.
-- Distinct types are supposed to work by overloading (or borrowing) proc `initFromJson[T](dst: var T; p: var JsonParser)`.
-  Not currently working. Blocked by a Nim bug.
+- Borrowing proc `initFromJson[T](dst: var T; p: var JsonParser)` for distinct types isn't
+  currently working. Blocked by a Nim bug. Use overloads for now.
 - Custom pragmas are not supported. Unless `hasCustomPragma` improves, this feature won't be added.
   You can currently substitute skipped fields by creating empty overloads.
 
