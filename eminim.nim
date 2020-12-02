@@ -48,7 +48,7 @@ proc storeJson*(s: Stream; n: float) =
 proc storeJson*(s: Stream; o: enum) =
   ## Construct a JsonNode that represents the specified enum value as a
   ## string. Creates a new ``JString JsonNode``.
-  storeJson(s, $o)
+  storeJson(s, int(o))
 
 proc storeJson*[T](s: Stream; elements: openArray[T]) =
   ## Generic constructor for JSON data. Creates a new `JArray JsonNode`
@@ -176,7 +176,7 @@ proc initFromJson*[T](dst: var seq[T]; p: var JsonParser) =
 
 proc initFromJson*[S, T](dst: var array[S, T]; p: var JsonParser) =
   eat(p, tkBracketLe)
-  var i: int = low(dst).ord
+  var i = int(low(dst))
   while p.tok != tkBracketRi:
     initFromJson(dst[S(i)], p)
     inc(i)
