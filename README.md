@@ -3,20 +3,11 @@
 
 This package provides the ``jsonTo``, ``loadJson`` procs and ``jsonItems`` iterator which deserializes
 the specified type from a ``Stream``. The `storeJson` procs are used to write the JSON
-representation of a location into a `Stream`. Lower level `initFromJson` and `storeJson`
-procs can be overloaded, in order to support arbitary container types, i.e. <examples/serial_smartptrs.nim>.
-
-## Features
-- Serializing and deserializing directly into `Streams`. For common cases it is done automatically.
-  Generally speaking intervation is needed when working with `ptr` types.
-- Supports `options`, `sets` and `tables` by default.
-- Strict field checking can be disabled at compile-time with `-d:eminimLenient`
-- Uses nim identifier equality rule to compare JSON fields.
-  Which means fields written in camelCase or snake_case are equal.
-- Overloading for serializing a custom object. See <examples/jsonprocs.nim>
+representation of a location into a `Stream`. Low level `initFromJson` and `storeJson`
+procs can be overloaded, in order to support arbitary container types, i.e.
+[serial_smartptrs.nim](examples/serial_smartptrs.nim).
 
 ## Usage
-
 ```nim
 import std/streams, eminim
 
@@ -37,13 +28,22 @@ var a: Foo
 s.loadJson(a)
 ```
 
-## How it works
+## Features
+- Serializing and deserializing directly into `Streams`. For common usage it is done automatically.
+  Generally speaking intervation is needed when working with `ptr` types.
+- Supports `options`, `sets` and `tables` by default.
+- Strict field checking can be disabled at compile-time with `-d:eminimLenient`.
+  Meaning you can parse complex JSON structures like the `World Bank dataset` and
+  retrieve only the fields you're interested.
+- Uses nim identifier equality algorithm to compare JSON fields.
+  Which means fields written in camelCase or snake_case are equal.
+- Overloading serialization procs. See [jsonprocs.nim](examples/jsonprocs.nim)
 
+## How it works
 It generates code, in compile time, to use directly the JsonParser, without creating an
 intermediate `JsonNode` tree.
 
 For example:
-
 ```nim
 type
   Bar = object
@@ -58,7 +58,6 @@ let a = s.jsonTo(Bar)
 ```
 
 Produces this code:
-
 ```nim
 proc initFromJson(dst: var Bar, p: var JsonParser) =
   eat(p, tkCurlyLe)
@@ -121,7 +120,6 @@ proc jsonTo(s: Stream, t: typedesc[Bar]): Bar =
 ```
 
 ## The jsonItems iterator
-
 Inspired by the [Machine Learning over JSON](https://www.naftaliharris.com/blog/machine-learning-json/)
 article, I originally designed `eminim` as a way to parse JSON datasets directly into Tensors.
 It's still very capable in this application.
