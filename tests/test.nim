@@ -146,6 +146,15 @@ block:
   assert responders.len == 1
   assert responders[0].gender == male
   assert responders[0].siblings.len == 2
+block:
+  var data: set[Fruit]
+  data.incl Apple
+  data.incl Orange
+  let s = newStringStream()
+  s.storeJson(data)
+  s.setPosition(0)
+  let a = s.jsonTo(set[Fruit])
+  assert(a == data)
 #block:
   #proc initFromJson(dst: var Baz; p: var JsonParser) {.borrow.}
   #let s = newStringStream(""" "world" """)
