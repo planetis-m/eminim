@@ -47,8 +47,8 @@ proc storeJson*(s: Stream; n: float) =
 
 proc storeJson*(s: Stream; o: enum) =
   ## Construct a Json that represents the specified enum value as a
-  ## int. Creates a new JInt.
-  storeJson(s, int(o))
+  ## string. Creates a new JString.
+  storeJson(s, $o)
 
 proc storeJson*[T](s: Stream; elements: openArray[T]) =
   ## Generic constructor for JSON data. Creates a new JArray.
