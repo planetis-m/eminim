@@ -5,7 +5,7 @@ This package provides the ``jsonTo``, ``loadJson`` procs and ``jsonItems`` itera
 the specified type from a ``Stream``. The `storeJson` procs are used to write the JSON
 representation of a location into a `Stream`. Low level `initFromJson` and `storeJson`
 procs can be overloaded, in order to support arbitary container types, i.e.
-[serial_smartptrs.nim](examples/serial_smartptrs.nim).
+[jsmartptrs.nim](eminim/jsmartptrs.nim).
 
 ## Usage
 ```nim

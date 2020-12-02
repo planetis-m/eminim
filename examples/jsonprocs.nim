@@ -1,4 +1,4 @@
-import parsejson, streams, eminim, manu/matrix
+import std/[parsejson, streams], eminim, manu/matrix
 
 proc storeJson*[T](s: Stream; m: Matrix[T]) =
   s.write "{"
@@ -54,7 +54,6 @@ proc initFromJson*[T](dst: var Matrix[T]; p: var JsonParser) =
     discard getTok(p)
   eat(p, tkCurlyRi)
 
-
 proc main =
    let x = matrix(2, @[0'f32, 1, 2, 3, 4, 5, 6, 7])
    let s = newStringStream()
@@ -62,3 +61,5 @@ proc main =
    s.setPosition(0)
    let nx = s.jsonTo(Matrix[float32])
    asert x == nx
+
+main()
