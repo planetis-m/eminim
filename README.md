@@ -1,4 +1,4 @@
-# Eminim — JSON marshal module for Nim
+# Eminim — JSON serialization framework for Nim
 ## About
 This package provides the ``jsonTo``, ``loadJson`` procs and ``jsonItems`` iterator which deserializes
 the specified type from a ``Stream``. The `storeJson` procs are used to write the JSON
@@ -7,6 +7,7 @@ procs can be overloaded, in order to support arbitary container types, i.e.
 [jsmartptrs.nim](eminim/jsmartptrs.nim).
 
 ## Usage
+
 ```nim
 import std/streams, eminim
 
@@ -40,6 +41,7 @@ It generates code, in compile time, to use directly the JsonParser, without crea
 intermediate `JsonNode` tree.
 
 For example:
+
 ```nim
 type
   Bar = object
@@ -54,6 +56,7 @@ let a = s.jsonTo(Bar)
 ```
 
 Produces this code:
+
 ```nim
 proc initFromJson(dst: var Bar, p: var JsonParser) =
   eat(p, tkCurlyLe)
@@ -141,7 +144,14 @@ for x in jsonItems(fs, IrisPlant):
   In all other cases it fails with a `JsonParserError`. This limitation is hard to improve.
   The current state might fit some use-cases and it's better than nothing.
 - Borrowing proc `initFromJson[T](dst: var T; p: var JsonParser)` for distinct types isn't
-  currently working. Blocked by a Nim bug. Use overloads for now.
+  currently working. Blocked by a Nim bug. Use overloads for now. Or you can easily override this behaviour
+  by copying these lines in your project:
+
+  ```nim
+  from typetraits import distinctBase
+  proc storeJson*[T: distinct](s: Stream; x: T) = storeJson(s, x.distinctBase)
+  proc initFromJson[T: distinct](dst: var T; p: var JsonParser) = initFromJson(dst.distinctBase, p)
+  ```
 - Custom pragmas are not supported. Unless `hasCustomPragma` improves, this feature won't be added.
   You can currently substitute skipped fields by creating empty overloads.
 

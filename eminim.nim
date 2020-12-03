@@ -186,16 +186,6 @@ proc initFromJson*[S, T](dst: var array[S, T]; p: var JsonParser) =
     #raise newException(RangeDefect, "array not filled")
   eat(p, tkBracketRi)
 
-proc initFromJson*[T](dst: var set[T]; p: var JsonParser) =
-  eat(p, tkBracketLe)
-  while p.tok != tkBracketRi:
-    var tmp: T
-    initFromJson(tmp, p)
-    dst.incl(tmp)
-    if p.tok != tkComma: break
-    discard getTok(p)
-  eat(p, tkBracketRi)
-
 proc initFromJson*[T](dst: var (SomeSet[T]|set[T]); p: var JsonParser) =
   eat(p, tkBracketLe)
   while p.tok != tkBracketRi:
