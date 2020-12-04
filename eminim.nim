@@ -224,7 +224,8 @@ proc initFromJson*[T](dst: var Option[T]; p: var JsonParser) =
     var tmp: T
     initFromJson(tmp, p)
     dst = some(tmp)
-  else: none[T]()
+  else:
+    dst = none[T]()
 
 proc detectIncompatibleType(typeExpr: NimNode) =
   if typeExpr.kind == nnkTupleConstr:
