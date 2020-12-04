@@ -38,7 +38,7 @@ s.loadJson(b)
 - Supports `options`, `sets` and `tables` by default.
 - Uses nim identifier equality algorithm to compare JSON fields.
   Which means fields written in camelCase or snake_case are equal.
-- Overloading serialization procs. See [jsonprocs.nim](examples/jsonprocs.nim)
+- Overloading serialization procs. See [Examples](examples/)
 
 ## How it works
 It generates code, in compile time, to use directly the JsonParser, without creating an
