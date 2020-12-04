@@ -17,12 +17,16 @@ type
     next: Foo
 
 let d = Foo(value: 1, next: Foo(value: 2, next: nil))
-let s = newStringStream()
+var s = newStringStream()
 # Make a roundtrip
 s.storeJson(d) # writes JSON from a location
+# Stream's data now contain:
+# {"value":1,"next":{"value":2,"next":null}}
 s.setPosition(0)
 let a = s.jsonTo(Foo) # reads JSON and transform to a type
 # Alternatively load directly into a location
+s = newStringStream()
+s.storeJson(d)
 s.setPosition(0)
 var b: Foo
 s.loadJson(b)
