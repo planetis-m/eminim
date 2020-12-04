@@ -1,4 +1,4 @@
-import eminim, std/[streams, parsejson, enumerate, math]
+import eminim, std/[streams, parsejson, enumerate, math, options, sets, tables]
 
 type
   Foo = ref object
@@ -62,52 +62,46 @@ type
   #s.write "{}"
 
 block:
-  let data = ContentNode(kind: P, pChildren: @[
-    ContentNode(kind: Text, textStr: "mychild"),
-    ContentNode(kind: Br)
-  ])
-  let s = newStringStream()
-  s.storeJson(data)
-  s.setPosition(0)
-  let a = s.jsonTo(ContentNode)
-  assert $a == $data
-block:
-  let data = Bar(kind: Apple, apple: "world")
-  let s = newStringStream()
-  s.storeJson(data)
-  s.setPosition(0)
-  let a = s.jsonTo(Bar)
-  assert a.kind == Apple
-  assert a.apple == "world"
-block:
-  let data = Foo(value: 1, next: Foo(value: 2, next: nil))
-  let s = newStringStream()
-  s.storeJson(data)
-  s.setPosition(0)
-  let a = s.jsonTo(Foo)
-  assert a.value == 1
-  let b = a.next
-  assert b.value == 2
-block:
   let data = [0, 1, 2, 3, 4, 5, 6]
   let s = newStringStream()
   s.storeJson(data)
   s.setPosition(0)
-  let a = s.jsonTo(BarBaz)
+  let a = s.jsonTo(typeof data)
   assert a == data
 block:
   let data: array[Fruit, int] = [0, 1, 2]
   let s = newStringStream()
   s.storeJson(data)
   s.setPosition(0)
-  let a = s.jsonTo(array[Fruit, int])
+  let a = s.jsonTo(typeof data)
   assert a == data
+block:
+  let data = "hello world"
+  let s = newStringStream()
+  s.storeJson(data)
+  s.setPosition(0)
+  let a = s.jsonTo(typeof data)
+  assert a == data
+block:
+  let data = @["αβγ", "δεζη", "θικλμ"]
+  let s = newStringStream()
+  s.storeJson(data)
+  s.setPosition(0)
+  let a = s.jsonTo(typeof data)
+  assert a == data
+#block:
+  #let data = @[(x: "3"), (x: "4"), (x: "5")]
+  #let s = newStringStream()
+  #s.storeJson(data)
+  #s.setPosition(0)
+  #let a = s.jsonTo(typeof data)
+  #assert a == data
 block:
   let data = FooBar(v: "hello", t: 1.0)
   let s = newStringStream()
   s.storeJson(data)
   s.setPosition(0)
-  let a = s.jsonTo(FooBar)
+  let a = s.jsonTo(typeof data)
   assert a.v == "hello"
   assert a.t == 1.0
 block:
@@ -122,8 +116,75 @@ block:
   let s = newStringStream()
   s.storeJson(data)
   s.setPosition(0)
-  let a = s.jsonTo(Stuff)
+  let a = s.jsonTo(typeof data)
   assert a == data
+block:
+  var data: set[Fruit]
+  data.incl Apple
+  data.incl Orange
+  let s = newStringStream()
+  s.storeJson(data)
+  s.setPosition(0)
+  let a = s.jsonTo(typeof data)
+  assert(a == data)
+#block:
+  #let s = newStringStream("""{"val": {"value": 42}}""")
+  #let a = s.jsonTo(typeof data)
+  #assert(a.val[0] == 42)
+block:
+  let data = some(Foo(value: 5, next: nil))
+  let s = newStringStream()
+  s.storeJson(data)
+  s.setPosition(0)
+  let a = s.jsonTo(typeof data)
+  assert a.get.value == 5
+block:
+  let data = some(Empty())
+  let s = newStringStream()
+  s.storeJson(data)
+  s.setPosition(0)
+  let a = s.jsonTo(typeof data)
+block:
+  let data = toHashSet([5'f32, 3, 2])
+  let s = newStringStream()
+  s.storeJson(data)
+  s.setPosition(0)
+  let a = s.jsonTo(typeof data)
+  assert a == data
+block:
+  let data = {"a": 5'i32, "b": 9'i32}.toTable
+  let s = newStringStream()
+  s.storeJson(data)
+  s.setPosition(0)
+  let a = s.jsonTo(typeof data)
+  assert a == data
+block:
+  let data = Foo(value: 1, next: Foo(value: 2, next: nil))
+  let s = newStringStream()
+  s.storeJson(data)
+  s.setPosition(0)
+  let a = s.jsonTo(typeof data)
+  assert a.value == 1
+  let b = a.next
+  assert b.value == 2
+block:
+  let data = Bar(kind: Apple, apple: "world")
+  let s = newStringStream()
+  s.storeJson(data)
+  s.setPosition(0)
+  let a = s.jsonTo(typeof data)
+  assert a.kind == Apple
+  assert a.apple == "world"
+block:
+  let data = ContentNode(kind: P, pChildren: @[
+    ContentNode(kind: Text, textStr: "mychild"),
+    ContentNode(kind: Br)
+  ])
+  let s = newStringStream()
+  s.storeJson(data)
+  s.setPosition(0)
+  let a = s.jsonTo(typeof data)
+  assert $a == $data
 block:
   let data = @[
     IrisPlant(sepalLength: 5.1, sepalWidth: 3.5, petalLength: 1.4,
@@ -144,30 +205,27 @@ block:
     Responder(name: "John Smith", gender: male, occupation: "student", age: 18,
       siblings: @[Sibling(sex: female, birth_year: 1991, relation: biological, alive: true),
                   Sibling(sex: male, birth_year: 1989, relation: step, alive: true)])]
-  var responders: seq[Responder]
-  let s = newStringStream()
-  s.storeJson(data)
-  s.setPosition(0)
-  for x in jsonItems(s, Responder):
-    responders.add x
-  assert responders.len == 1
-  assert responders[0].gender == male
-  assert responders[0].siblings.len == 2
-block:
-  var data: set[Fruit]
-  data.incl Apple
-  data.incl Orange
-  let s = newStringStream()
-  s.storeJson(data)
-  s.setPosition(0)
-  let a = s.jsonTo(set[Fruit])
-  assert(a == data)
-#block:
-  #proc initFromJson(dst: var Baz; p: var JsonParser) {.borrow.}
-  #let s = newStringStream(""" "world" """)
-  #let a = s.jsonTo(Baz)
-  #assert a.string == "world"
-#block:
-  #let s = newStringStream("""{"val": {"value": 42}}""")
-  #let a = s.jsonTo(Rejected)
-  #assert(a.val[0] == 42)
+  block:
+    var a: seq[Responder]
+    let s = newStringStream()
+    s.storeJson(data)
+    s.setPosition(0)
+    for x in jsonItems(s, Responder):
+      a.add x
+    assert a.len == 1
+    assert a[0].gender == male
+    assert a[0].siblings.len == 2
+  block:
+    let s = newStringStream()
+    s.storeJson(data)
+    s.setPosition(0)
+    var a = @data
+    a[0].name = "Janne Smith"
+    a[0].gender = female
+    a[0].siblings[0].birthYear = 1997
+    a[0].siblings.add Sibling()
+    s.loadJson(a)
+    assert a[0].name == "John Smith"
+    assert a[0].gender == male
+    assert a[0].siblings.len == 2
+    assert a[0].siblings[0].birthYear == 1991

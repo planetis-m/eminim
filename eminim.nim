@@ -93,7 +93,7 @@ proc storeJson*[T](s: Stream; o: Option[T]) =
   else:
     s.newJNull()
 
-proc storeJson*(s: Stream; o: object) =
+proc storeJson*[T: object](s: Stream; o: T) =
   ## Generic constructor for JSON data. Creates a new JObject
   var comma = false
   s.write "{"
@@ -166,6 +166,7 @@ proc initFromJson*[T: enum](dst: var T; p: var JsonParser) =
 
 proc initFromJson*[T](dst: var seq[T]; p: var JsonParser) =
   eat(p, tkBracketLe)
+  dst.setLen(0)
   while p.tok != tkBracketRi:
     var tmp: T
     initFromJson(tmp, p)
@@ -201,7 +202,7 @@ proc initFromJson*[T](dst: var (Table[string, T]|OrderedTable[string, T]); p: va
   while p.tok != tkCurlyRi:
     if p.tok != tkString:
       raiseParseErr(p, "string literal as key")
-    let key = p.a
+    var key = p.a
     discard getTok(p)
     eat(p, tkColon)
     initFromJson(mgetOrPut(dst, key, default(T)), p)
@@ -224,7 +225,8 @@ proc initFromJson*[T](dst: var Option[T]; p: var JsonParser) =
     var tmp: T
     initFromJson(tmp, p)
     dst = some(tmp)
-  else: none[T]()
+  else:
+    dst = none[T]()
 
 proc detectIncompatibleType(typeExpr: NimNode) =
   if typeExpr.kind == nnkTupleConstr:
