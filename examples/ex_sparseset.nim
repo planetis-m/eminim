@@ -6,18 +6,19 @@
 proc storeJson*[T](s: Stream; a: Storage[T]) =
    s.write "["
    var comma = false
-   for i in 0 ..< a.len:
+   for e, val in a.pairs:
       if comma: s.write ","
       else: comma = true
       s.write "["
-      storeJson(s, a.packedToSparse[i])
+      storeJson(s, e)
       s.write ","
-      storeJson(s, a.packed[i])
+      storeJson(s, val)
       s.write "]"
    s.write "]"
 
 proc initFromJson*[T](dst: var Storage[T]; p: var JsonParser) =
    eat(p, tkBracketLe)
+   dst = initStorage[T]()
    while p.tok != tkBracketRi:
       eat(p, tkBracketLe)
       var e: Entity
