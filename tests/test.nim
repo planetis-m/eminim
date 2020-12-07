@@ -10,7 +10,9 @@ type
     NotApple = 1, NotBanana, NotOrange
   Baz = distinct string
   BarBaz = array[2..8, int]
-  BarBar = object
+  FooBaz = object
+    val: BarBar
+  BarBar = tuple
     value: Baz
   Bar = ref object
     case kind: Fruit
@@ -54,12 +56,13 @@ type
     siblings: seq[Sibling]
   Sibling = object
     sex: Gender
-    birth_year: int
+    birthYear: int
     relation: Relation
     alive: bool
 
-#proc storeJson(s: Stream; o: IrisPlant) =
-  #s.write "{}"
+proc initFromJson(dst: var Baz; p: var JsonParser) =
+  initFromJson(string(dst), p)
+proc `==`(a, b: Baz): bool {.borrow.}
 
 block:
   let data = [0, 1, 2, 3, 4, 5, 6]
@@ -89,13 +92,13 @@ block:
   s.setPosition(0)
   let a = s.jsonTo(typeof data)
   assert a == data
-#block:
-  #let data = @[(x: "3"), (x: "4"), (x: "5")]
-  #let s = newStringStream()
-  #s.storeJson(data)
-  #s.setPosition(0)
-  #let a = s.jsonTo(typeof data)
-  #assert a == data
+block:
+  let data = @[(x: "3"), (x: "4"), (x: "5")]
+  let s = newStringStream()
+  s.storeJson(data)
+  s.setPosition(0)
+  let a = s.jsonTo(typeof data)
+  assert a == data
 block:
   let data = FooBar(v: "hello", t: 1.0)
   let s = newStringStream()
@@ -128,9 +131,15 @@ block:
   let a = s.jsonTo(typeof data)
   assert(a == data)
 #block:
-  #let s = newStringStream("""{"val": {"value": 42}}""")
-  #let a = s.jsonTo(typeof data)
-  #assert(a.val[0] == 42)
+  #let data = Rejected(val: (1,))
+  #let s = newStringStream()
+  #s.storeJson(data)
+  #s.setPosition(0)
+  #let a = s.jsonTo(Rejected)
+block:
+  let s = newStringStream("""{"va_l": {"vaLue": "stuff"}}""")
+  let a = s.jsonTo(FooBaz)
+  assert(a.val[0] == Baz"stuff")
 block:
   let data = some(Foo(value: 5, next: nil))
   let s = newStringStream()
@@ -203,8 +212,8 @@ block:
 block:
   let data = [
     Responder(name: "John Smith", gender: male, occupation: "student", age: 18,
-      siblings: @[Sibling(sex: female, birth_year: 1991, relation: biological, alive: true),
-                  Sibling(sex: male, birth_year: 1989, relation: step, alive: true)])]
+      siblings: @[Sibling(sex: female, birthYear: 1991, relation: biological, alive: true),
+                  Sibling(sex: male, birthYear: 1989, relation: step, alive: true)])]
   block:
     var a: seq[Responder]
     let s = newStringStream()

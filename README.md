@@ -154,7 +154,7 @@ for x in jsonItems(fs, IrisPlant):
   ```nim
   from typetraits import distinctBase
   proc storeJson*[T: distinct](s: Stream; x: T) = storeJson(s, x.distinctBase)
-  proc initFromJson[T: distinct](dst: var T; p: var JsonParser) = initFromJson(dst.distinctBase, p)
+  proc initFromJson*[T: distinct](dst: var T; p: var JsonParser) = initFromJson(dst.distinctBase, p)
   ```
 - Custom pragmas are not supported. Unless `hasCustomPragma` improves, this feature won't be added.
   You can currently substitute skipped fields by creating empty overloads.

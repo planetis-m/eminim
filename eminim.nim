@@ -1,4 +1,5 @@
 import macros, parsejson, strutils, streams, options, tables, sets
+from typetraits import isNamedTuple, distinctBase
 
 # serialization
 proc escapeJsonUnquoted*(x: string; s: Stream) =
@@ -92,6 +93,21 @@ proc storeJson*[T](s: Stream; o: Option[T]) =
     storeJson(s, get(o))
   else:
     s.newJNull()
+
+proc storeJson*[T: tuple](s: Stream; o: T) =
+  ## Generic constructor for JSON data. Creates a new JObject
+  var comma = false
+  when isNamedTuple(T):
+    s.write "{"
+    for k, v in o.fieldPairs:
+      if comma: s.write ","
+      else: comma = true
+      escapeJson(s, k)
+      s.write ":"
+      storeJson(s, v)
+    s.write "}"
+  else:
+    {.error: "Tuples with unnamed fields not supported".}
 
 proc storeJson*[T: object](s: Stream; o: T) =
   ## Generic constructor for JSON data. Creates a new JObject
