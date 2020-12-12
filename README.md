@@ -39,6 +39,9 @@ s.loadJson(b)
 - Uses nim identifier equality algorithm to compare JSON fields.
   Which means fields written in camelCase or snake_case are equal.
 - Overloading serialization procs. See [Examples](examples/)
+- Strict field checking can be disabled at compile-time with `-d:emiLenient`.
+  Meaning you can parse complex JSON structures like the `World Bank dataset` and
+  retrieve only the fields you're interested.
 
 ## How it works
 It generates code, in compile time, to use directly the JsonParser, without creating an

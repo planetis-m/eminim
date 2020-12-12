@@ -248,6 +248,31 @@ proc detectIncompatibleType(typeExpr: NimNode) =
   if typeExpr.kind == nnkTupleConstr:
     error("Use a named tuple instead of: " & typeExpr.repr)
 
+proc skipJson(p: var JsonParser) =
+  case p.tok
+  of tkString, tkInt, tkFloat, tkTrue, tkFalse, tkNull:
+    discard getTok(p)
+  of tkCurlyLe:
+    discard getTok(p)
+    while p.tok != tkCurlyRi:
+      if p.tok != tkString:
+        raiseParseErr(p, "string literal as key")
+      discard getTok(p)
+      eat(p, tkColon)
+      skipJson(p)
+      if p.tok != tkComma: break
+      discard getTok(p)
+    eat(p, tkCurlyRi)
+  of tkBracketLe:
+    discard getTok(p)
+    while p.tok != tkBracketRi:
+      skipJson(p)
+      if p.tok != tkComma: break
+      discard getTok(p)
+    eat(p, tkBracketRi)
+  of tkError, tkCurlyRi, tkBracketRi, tkColon, tkComma, tkEof:
+    raiseParseErr(p, "{")
+
 template readFieldsInner(parser, body) =
   if p.tok != tkComma: break
   discard getTok(p)
@@ -259,7 +284,8 @@ template readFieldsInner(parser, body) =
     discard getTok(parser)
 
 template raiseWrongKey(parser) =
-  raiseParseErr(parser, "valid object field")
+  when defined(emiLenient): skipJson(parser)
+  else: raiseParseErr(parser, "valid object field")
 
 template getFieldValue(parser, tmpSym, fieldSym) =
   discard getTok(parser)
