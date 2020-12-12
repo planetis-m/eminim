@@ -165,3 +165,4 @@ for x in jsonItems(fs, IrisPlant):
 ## Acknowledgements
 - Thanks to @krux02 for his review and valuable feedback. This rewrite wouldn't
   be possible without his work on `json.to`.
+- treeform, for his "not-strict" idea, also check out his package `treeform/jsony`.

@@ -284,7 +284,10 @@ template readFieldsInner(parser, body) =
     discard getTok(parser)
 
 template raiseWrongKey(parser) =
-  when defined(emiLenient): skipJson(parser)
+  when defined(emiLenient):
+    discard getTok(parser)
+    eat(parser, tkColon)
+    skipJson(parser)
   else: raiseParseErr(parser, "valid object field")
 
 template getFieldValue(parser, tmpSym, fieldSym) =

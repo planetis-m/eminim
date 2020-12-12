@@ -3,7 +3,7 @@
 # This datastructures is like a Table[int, T],
 # we resort to using arrays for the (key, value) pairs.
 
-proc storeJson*[T](s: Stream; a: Storage[T]) =
+proc storeJson*[T](s: Stream; a: SparseSet[T]) =
   s.write "["
   var comma = false
   for e, val in a.pairs:
@@ -16,9 +16,9 @@ proc storeJson*[T](s: Stream; a: Storage[T]) =
     s.write "]"
   s.write "]"
 
-proc initFromJson*[T](dst: var Storage[T]; p: var JsonParser) =
+proc initFromJson*[T](dst: var SparseSet[T]; p: var JsonParser) =
   eat(p, tkBracketLe)
-  dst = initStorage[T]()
+  dst = initSparseSet[T]()
   while p.tok != tkBracketRi:
     eat(p, tkBracketLe)
     var e: Entity
