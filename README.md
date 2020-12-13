@@ -40,7 +40,7 @@ s.loadJson(b)
   Which means fields written in camelCase or snake_case are equal.
 - Overloading serialization procs. See [Examples](examples/)
 - Strict field checking can be disabled at compile-time with `-d:emiLenient`.
-  Meaning you can parse complex JSON structures like the [World Bank dataset](tests/tlenient) and
+  Meaning you can parse complex JSON structures like the [World Bank dataset](tests/tlenient.nim) and
   retrieve only the fields you're interested.
 
 ## How it works
