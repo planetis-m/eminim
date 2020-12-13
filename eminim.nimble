@@ -1,6 +1,6 @@
 # Package
 
-version       = "2.8.1"
+version       = "2.8.2"
 author        = "Antonis Geralis"
 description   = "JSON serialization framework for Nim"
 license       = "MIT"
