@@ -33,14 +33,14 @@ s.loadJson(b)
 ```
 
 ## Features
-- Serializing and deserializing directly into `Streams`. For common usage it is done automatically.
+- Serializing and deserializing directly into `Stream`. For common usage it is done automatically.
   Generally speaking intervation is needed when working with `ptr` types.
 - Supports `options`, `sets` and `tables` by default.
 - Uses nim identifier equality algorithm to compare JSON fields.
   Which means fields written in camelCase or snake_case are equal.
 - Overloading serialization procs. See [Examples](examples/)
 - Strict field checking can be disabled at compile-time with `-d:emiLenient`.
-  Meaning you can parse complex JSON structures like the `World Bank dataset` and
+  Meaning you can parse complex JSON structures like the [World Bank dataset](tests/tlenient) and
   retrieve only the fields you're interested.
 
 ## How it works
@@ -161,6 +161,9 @@ for x in jsonItems(fs, IrisPlant):
   ```
 - Custom pragmas are not supported. Unless `hasCustomPragma` improves, this feature won't be added.
   You can currently substitute skipped fields by creating empty overloads.
+
+## Binary serialization
+If you need binary serialization instead, check [planetis-m/bingo](https://github.com/planetis-m/bingo).
 
 ## Acknowledgements
 - Thanks to @krux02 for his review and valuable feedback. This rewrite wouldn't
