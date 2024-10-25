@@ -1,5 +1,5 @@
-import macros, parsejson, strutils, streams, options, tables, sets
-from typetraits import isNamedTuple, distinctBase
+import std/[macros, parsejson, strutils, streams, options, tables, sets, formatfloat]
+from std/typetraits import isNamedTuple, distinctBase
 
 # serialization
 proc escapeJsonUnquoted*(x: string; s: Stream) =
